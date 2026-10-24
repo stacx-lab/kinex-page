@@ -9,6 +9,8 @@ Use Node.js 22.12 or later (`.nvmrc` selects Node 22).
 
 ```sh
 npm ci
+git lfs install --local
+git lfs pull
 npm run dev
 npm run check
 npm run preview
@@ -16,6 +18,8 @@ npm run preview
 
 `check` runs Astro's type checks, builds the site and Pagefind search index, and
 checks internal links, anchors, media, canonical URLs, and sitemap entries.
+The build rejects unresolved LFS pointers, invalid video containers, and MP4s
+without fast-start metadata, both before bundling and in the published output.
 Search is available in the production preview after building.
 
 ## Content and routes
@@ -33,8 +37,15 @@ Edit documentation here going forward. Root-relative documentation links use
 `src/data/`. The Blog navigation link points to the lab's existing blog.
 The original gallery production sources remain in `stacx-lab.github.io/gallery/`.
 This repository includes the published media and the two tutorial videos imported
-by the docs in `gallery/.masters/`. These copies are ordinary Git files, so the
-standalone build does not need Git LFS or the lab checkout.
+by the docs in `gallery/.masters/`. Those two masters use Git LFS, matching the
+source repository. Install Git LFS and run the commands above after cloning.
+The Actions checkout downloads LFS content before building, and Astro bundles
+the actual tutorial videos into `dist/_astro/` for Pages to serve.
+
+Compressed MP4/WebM delivery files in `public/` stay in ordinary Git. Keep MP4s
+in H.264/yuv420p with fast-start metadata; retain WebM alternatives and poster
+images for gallery videos. Players use `preload="none"` to avoid downloading
+videos before playback. The build is independent of the lab checkout.
 
 ## GitHub Pages and domain setup
 
