@@ -1,0 +1,14 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Page not found" description="This page could not be found.">
+  <main id="main" class="wrap missing">
+    <p class="kicker">404</p>
+    <h1>Page not found</h1>
+    <p>Try the <a href="/">Kinex homepage</a> or the <a href="/docs/">documentation</a>.</p>
+  </main>
+</Base>
+<style>
+  .missing { min-height: calc(100vh - 125px); padding-block: 100px; }
+  a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+</style>

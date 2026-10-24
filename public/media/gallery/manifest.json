@@ -1,0 +1,353 @@
+{
+  "schema": "kinex/gallery/1",
+  "notes": [
+    "Delivery videos are compressed at 1920\u00d71080, 30 FPS; archival MP4 masters are retained in gallery/.masters/.",
+    "Original frame order, duration, cuts, and variable speed are preserved; container timestamp origins are normalized to zero.",
+    "H.264: libx264 slow CRF 28, faststart. WebM: libvpx-vp9 good cpu-used 3 CRF 38."
+  ],
+  "clips": [
+    {
+      "id": "abc-yam-cube",
+      "source": "gallery/.masters/abc-yam-cube.mp4",
+      "source_sha256": "9ec41fbda1da34d6d8a88e890d369b33834673187b076986fd4af9cfad70268a",
+      "source_bytes": 21947466,
+      "mp4_sha256": "04446cb065eb32810944d3e8eb99a9f4352e7f4a6decef9f5c2a7652312f80e5",
+      "duration_s": 75,
+      "fps": 30,
+      "frame_count": 2250,
+      "width": 1920,
+      "height": 1080,
+      "playback_rate": 1,
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "environment": "Real world",
+      "metadata_source": "Original session.jsonl model_change entries and all assistant thinkingLevel fields; gallery/abc-yam-cube/abc-yam-cube.provenance.json.",
+      "source_first_pts_s": 0,
+      "delivery_first_pts_s": 0,
+      "files": {
+        "mp4": {
+          "bytes": 7430358,
+          "sha256": "04446cb065eb32810944d3e8eb99a9f4352e7f4a6decef9f5c2a7652312f80e5"
+        },
+        "webm": {
+          "bytes": 8881367,
+          "sha256": "267f1da31b4f1773aa891148b35d2abb47c861fed0fb62ce10385ce105cc5168"
+        },
+        "poster.jpg": {
+          "bytes": 434537,
+          "sha256": "2ae144756f5485eba36085942c003ae24b4920893764a3c1bc92942520c7643d"
+        }
+      },
+      "encoder_settings": {
+        "mp4": [
+          "-c:v",
+          "libx264",
+          "-preset",
+          "slow",
+          "-crf",
+          "28",
+          "-pix_fmt",
+          "yuv420p",
+          "-movflags",
+          "+faststart"
+        ],
+        "webm": [
+          "-c:v",
+          "libvpx-vp9",
+          "-deadline",
+          "good",
+          "-cpu-used",
+          "3",
+          "-b:v",
+          "0",
+          "-crf",
+          "38",
+          "-row-mt",
+          "1"
+        ]
+      },
+      "provenance": "gallery/abc-yam-cube/abc-yam-cube.provenance.json"
+    },
+    {
+      "id": "teleavatar-tube-transfer",
+      "source": "gallery/.masters/teleavatar-tube-transfer.mp4",
+      "source_sha256": "9ed93bfac3579dcc020d8925fa0f9dbf2049959fd4a733846eabb0508fe086eb",
+      "source_bytes": 13814431,
+      "mp4_sha256": "9c48e2bcb835544be4157622a8cde917a04ff2e7c75e6ee685847b5e39a1f08c",
+      "duration_s": 75,
+      "fps": 30,
+      "frame_count": 2250,
+      "width": 1920,
+      "height": 1080,
+      "playback_rate": 1,
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "environment": "Real world",
+      "robot": "TeleAvatar",
+      "metadata_source": "GPT-6-Astra from entry 1; high effort from entry 3 before the user task. Robot display name confirmed by user.",
+      "source_first_pts_s": 0,
+      "delivery_first_pts_s": 0,
+      "files": {
+        "mp4": {
+          "bytes": 4950917,
+          "sha256": "9c48e2bcb835544be4157622a8cde917a04ff2e7c75e6ee685847b5e39a1f08c"
+        },
+        "webm": {
+          "bytes": 5407826,
+          "sha256": "2215dc054e51bb5475164077129b1853b739ceefd6472d7d1566d5b74de9e13f"
+        },
+        "poster.jpg": {
+          "bytes": 426363,
+          "sha256": "4d233f0386a1dff49a09e40c3eb506a0ca67a901e0b04539eda5c45714d24566"
+        }
+      },
+      "encoder_settings": {
+        "mp4": [
+          "-c:v",
+          "libx264",
+          "-preset",
+          "slow",
+          "-crf",
+          "28",
+          "-pix_fmt",
+          "yuv420p",
+          "-movflags",
+          "+faststart"
+        ],
+        "webm": [
+          "-c:v",
+          "libvpx-vp9",
+          "-deadline",
+          "good",
+          "-cpu-used",
+          "3",
+          "-b:v",
+          "0",
+          "-crf",
+          "38",
+          "-row-mt",
+          "1"
+        ]
+      },
+      "provenance": "gallery/teleavatar-tube-transfer/teleavatar-tube-transfer.provenance.json"
+    },
+    {
+      "id": "go2-trash-clean",
+      "source": "gallery/.masters/go2-trash-clean.mp4",
+      "source_sha256": "31961f393eff23d1a955d015be468e86c395be5d029fe001df3f31d072551f0d",
+      "source_bytes": 14631255,
+      "mp4_sha256": "66fed74f7a3f54d9f950f86bace1204544e90767d2635a8765749f6efe56cf2e",
+      "duration_s": 89,
+      "fps": 30,
+      "frame_count": 2670,
+      "width": 1920,
+      "height": 1080,
+      "playback_rate": 1,
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "environment": "Real world",
+      "robot": "Go2 + D1",
+      "metadata_source": "Original model_change/thinking_level_change entries, reconciled with assistant message model fields.",
+      "source_first_pts_s": 0,
+      "delivery_first_pts_s": 0,
+      "files": {
+        "mp4": {
+          "bytes": 4997697,
+          "sha256": "66fed74f7a3f54d9f950f86bace1204544e90767d2635a8765749f6efe56cf2e"
+        },
+        "webm": {
+          "bytes": 6142162,
+          "sha256": "38e53536e6c028d83b38602d34c20220567e35a6977dee6d31d2c215c1f795a4"
+        },
+        "poster.jpg": {
+          "bytes": 328948,
+          "sha256": "e26627f003edc834680134b079e694f1846ad658f235cf826906d4ebae3070d4"
+        }
+      },
+      "encoder_settings": {
+        "mp4": [
+          "-c:v",
+          "libx264",
+          "-preset",
+          "slow",
+          "-crf",
+          "28",
+          "-pix_fmt",
+          "yuv420p",
+          "-movflags",
+          "+faststart"
+        ],
+        "webm": [
+          "-c:v",
+          "libvpx-vp9",
+          "-deadline",
+          "good",
+          "-cpu-used",
+          "3",
+          "-b:v",
+          "0",
+          "-crf",
+          "38",
+          "-row-mt",
+          "1"
+        ]
+      },
+      "provenance": "gallery/go2-trash-clean/go2-trash-clean.provenance.json"
+    },
+    {
+      "id": "real-hang-mug",
+      "source": "gallery/.masters/real-hang-mug.mp4",
+      "source_sha256": "47ee07043177ac972bc2633a046835f2d5f49c4fcdc7ec27540823910806ed3a",
+      "source_bytes": 16843324,
+      "mp4_sha256": "c011f41b361767e171426c772bf1a67600396371a921323089bd2fcaf2fbdea0",
+      "duration_s": 60,
+      "fps": 30,
+      "frame_count": 1800,
+      "width": 1920,
+      "height": 1080,
+      "playback_rate": 1,
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "environment": "Real world",
+      "robot": "YAM",
+      "metadata_source": "Original model_change/thinking_level_change entries, reconciled with assistant message model fields.",
+      "source_first_pts_s": 0,
+      "delivery_first_pts_s": 0,
+      "files": {
+        "mp4": {
+          "bytes": 5322677,
+          "sha256": "c011f41b361767e171426c772bf1a67600396371a921323089bd2fcaf2fbdea0"
+        },
+        "webm": {
+          "bytes": 5878352,
+          "sha256": "8471f1e52737322a4fb869b96008bf2c40a85e33bc9bfaf894bf2bcbcd348c90"
+        },
+        "poster.jpg": {
+          "bytes": 472343,
+          "sha256": "5fbd92ec8d654457eac0f7ccfdad4da35e26bdff3a9a3bf24faddfc6590a60c8"
+        }
+      },
+      "encoder_settings": {
+        "mp4": [
+          "-c:v",
+          "libx264",
+          "-preset",
+          "slow",
+          "-crf",
+          "28",
+          "-pix_fmt",
+          "yuv420p",
+          "-movflags",
+          "+faststart"
+        ],
+        "webm": [
+          "-c:v",
+          "libvpx-vp9",
+          "-deadline",
+          "good",
+          "-cpu-used",
+          "3",
+          "-b:v",
+          "0",
+          "-crf",
+          "38",
+          "-row-mt",
+          "1"
+        ]
+      },
+      "provenance": "gallery/real-hang-mug/real-hang-mug.provenance.json"
+    },
+    {
+      "id": "xarm-sort",
+      "source": "gallery/.masters/xarm-sort.mp4",
+      "source_sha256": "dce143a143b864e5b8693863c13670ad662910bcf373e0466755e28f0eeffca2",
+      "source_bytes": 14157877,
+      "mp4_sha256": "4e1d694e3953a9423bb6ad0e3679ce7224ad7da945a428c870dc6dfed0c836dc",
+      "duration_s": 60,
+      "fps": 30,
+      "frame_count": 1800,
+      "width": 1920,
+      "height": 1080,
+      "playback_rate": 1,
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "environment": "Real world",
+      "robot": "xArm 7",
+      "metadata_source": "GPT-6-Astra from entry 8, before all tool calls; medium from entry 2. Initial inactive configuration GPT-5.5 retained in provenance.",
+      "source_first_pts_s": 0,
+      "delivery_first_pts_s": 0,
+      "files": {
+        "mp4": {
+          "bytes": 4638966,
+          "sha256": "4e1d694e3953a9423bb6ad0e3679ce7224ad7da945a428c870dc6dfed0c836dc"
+        },
+        "webm": {
+          "bytes": 4956839,
+          "sha256": "6bb8e8aae4ea8decfc32462934009958c9dcd2ef54560bcc9a301dd6480ca998"
+        },
+        "poster.jpg": {
+          "bytes": 401146,
+          "sha256": "2a3ddda81e42e7fe0c712e370e0b87091a9c4cc0609150af480ae9bda691a373"
+        }
+      },
+      "encoder_settings": {
+        "mp4": [
+          "-c:v",
+          "libx264",
+          "-preset",
+          "slow",
+          "-crf",
+          "28",
+          "-pix_fmt",
+          "yuv420p",
+          "-movflags",
+          "+faststart"
+        ],
+        "webm": [
+          "-c:v",
+          "libvpx-vp9",
+          "-deadline",
+          "good",
+          "-cpu-used",
+          "3",
+          "-b:v",
+          "0",
+          "-crf",
+          "38",
+          "-row-mt",
+          "1"
+        ]
+      },
+      "provenance": "gallery/xarm-sort/xarm-sort.provenance.json"
+    },
+    {
+      "id": "yam-hang-mug",
+      "source": "gallery/.masters/yam-hang-mug.mp4",
+      "mp4_sha256": "c78aa4560211fc3b2afd34a8301af9664c21b1fca6a4f7d16d8bc331158bead4",
+      "duration_s": 45,
+      "fps": 30,
+      "playback_rate": 1,
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "metadata_source": "Recorded session export, captured in gallery/yam-hang-mug/yam-hang-mug.provenance.json.",
+      "source_sha256": "11d3f1cf07b63eb20da8b2d84755b263d805ed0344ead3dbc97ec4d8c823b2a0",
+      "source_bytes": 6208151,
+      "files": {
+        "mp4": {
+          "bytes": 2762936,
+          "sha256": "c78aa4560211fc3b2afd34a8301af9664c21b1fca6a4f7d16d8bc331158bead4"
+        },
+        "webm": {
+          "bytes": 2427706,
+          "sha256": "46e22dfa1a8ac3c49c8e1f66d6e5a10383c31b72c3c48a507a43a976fce362d6"
+        }
+      },
+      "environment": "Simulator",
+      "width": 1920,
+      "height": 1080,
+      "source_first_pts_s": 0.0,
+      "delivery_first_pts_s": 0.0,
+      "frame_count": 1350
+    }
+  ]
+}
