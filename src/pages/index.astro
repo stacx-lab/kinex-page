@@ -11,8 +11,8 @@ import BenchmarkResults from '../components/BenchmarkResults.astro';
 import { site } from '../config';
 import { url } from '../lib/url';
 const paths = [
-  { k: 'Already using ROS 2?', cmd: 'onboard-ros2', prefix: 'Skill:', body: 'Reuse existing ROS packages with adapters for common interfaces. Supports ROS 2 Jazzy on Ubuntu 24.04.', href: '/docs/ros2/' },
-  { k: 'Play with simulators', cmd: 'roboenv setup', body: 'RoboEnv exposes simulated robots as Kinex devices, with the same interfaces as real hardware.', href: '/docs/simulators/' },
+  { k: 'Already using ROS 2?', cmd: 'setup-device', prefix: 'Skill:', body: 'Kinex devices are ROS 2 nodes, so onboarding reuses your existing drivers and topics. Supports ROS 2 Jazzy and Humble.', href: '/docs/real-robots/#robots-that-already-run-ros-2' },
+  { k: 'Play with simulators', cmd: 'rosbridge setup', body: 'rosbridge runs LIBERO, RoboTwin, RoboCasa, RoboDojo, ABC and BEHAVIOR with the same device interfaces as real hardware.', href: '/docs/simulators/' },
   { k: 'Work with real robots', cmd: '/onboarding', body: 'Describe the hardware and the task. Kinex connects the devices and calibrates what the task needs.', href: '/docs/real-robots/' },
 ];
 ---
@@ -45,12 +45,12 @@ const paths = [
       <p class="kicker">02 · Architecture</p>
       <div class="architecture-part">
         <h2 id="architecture-heading">Three layers of abstraction for acting with arbitrary robots.</h2>
-        <p class="section-copy">An agent needs a way to turn a goal into physical action. Kinex separates that work into three layers: <strong>skills</strong> describe how to approach a task, <strong>tools</strong> carry out perception, computation, and control, and <strong>devices</strong> expose the robot’s capabilities through typed interfaces. Results flow back to the agent so it can decide what to do next.</p>
+        <p class="section-copy">An agent needs a way to turn a goal into physical action. Kinex separates that work into three layers: <strong>skills</strong> describe how to approach a task, the <strong>control graph</strong> is the Python the agent writes to carry out perception, computation, and control, and <strong>devices</strong> expose the robot’s capabilities through typed ROS 2 interfaces. Results flow back to the agent so it can decide what to do next.</p>
         <ArchDiagram />
       </div>
       <div class="architecture-part">
         <h2>A system of devices rather than a monolithic robot</h2>
-        <p class="section-copy">Kinex exposes a robot as independent devices: a mobile base, torso, arms, grippers, and cameras. The agent writes and runs tools and code to coordinate these devices for each task. This makes workflows more flexible, lets each task compose the robot it needs, and helps them generalize across robot configurations. If a camera is missing, for example, the agent can inspect the remaining devices, use another viewpoint where available, and revise its workflow to fit the capabilities it actually has.</p>
+        <p class="section-copy">Kinex exposes a robot as independent devices: a mobile base, torso, arms, grippers, and cameras. The agent writes and runs control code to coordinate these devices for each task. This makes workflows more flexible, lets each task compose the robot it needs, and helps them generalize across robot configurations. If a camera is missing, for example, the agent can inspect the remaining devices, use another viewpoint where available, and revise its workflow to fit the capabilities it actually has.</p>
         <DeviceDiagram />
       </div>
     </section>

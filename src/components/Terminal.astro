@@ -21,7 +21,7 @@ const steps: Step[] = data.steps;
     </div>
     <div class="body">
       <div class="shell" data-shell aria-label="Environment setup commands">
-        <div class="shell-label">RoboEnv <span>~/lab</span></div>
+        <div class="shell-label">rosbridge <span>~/lab</span></div>
         {data.shell.map(line => (
           <div class:list={['shell-line', line.kind]} data-line>
             <span class="prompt" aria-hidden="true">{line.kind === 'sh' ? '$' : ''}</span>

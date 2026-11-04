@@ -1,8 +1,8 @@
 ---
 // Self-hosted fonts: Lato (body), Roboto Slab (headings), Commit Mono (code, labels).
-// Critical faces are preloaded so they arrive with the HTML, and `font-display: optional`
-// means a page never swaps fonts mid-render (no flash): if a font isn't ready for
-// first paint, that page keeps the fallback and later pages render from cache.
+// Critical faces are preloaded so they usually arrive before first paint. `font-display: swap`
+// applies each font as soon as it loads, even on a first, uncached visit; `optional` would
+// keep the fallback for the whole page view whenever a font misses first paint.
 import lato400 from '@fontsource/lato/files/lato-latin-400-normal.woff2?url';
 import lato700 from '@fontsource/lato/files/lato-latin-700-normal.woff2?url';
 import lato400i from '@fontsource/lato/files/lato-latin-400-italic.woff2?url';
@@ -19,7 +19,7 @@ const faces = [
   { family: 'Commit Mono', src: mono700, weight: 700, style: 'normal', preload: false },
 ];
 const css = faces
-  .map((f) => `@font-face{font-family:'${f.family}';font-style:${f.style};font-weight:${f.weight};font-display:optional;src:url(${f.src}) format('woff2');}`)
+  .map((f) => `@font-face{font-family:'${f.family}';font-style:${f.style};font-weight:${f.weight};font-display:swap;src:url(${f.src}) format('woff2');}`)
   .join('');
 ---
 {faces.filter((f) => f.preload).map((f) => <link rel="preload" href={f.src} as="font" type="font/woff2" crossorigin />)}

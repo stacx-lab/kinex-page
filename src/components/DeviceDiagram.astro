@@ -3,11 +3,11 @@ const devices = [
   { id: 'head-camera', name: 'Head camera', type: 'rgbd', detail: 'Color and depth observations provide the measurements used to estimate a target position.' },
   { id: 'left-camera', name: 'Left wrist camera', type: 'rgb', detail: 'A close view from the left wrist provides another viewpoint for inspection and verification.' },
   { id: 'right-camera', name: 'Right wrist camera', type: 'rgb', detail: 'A close view from the right wrist moves with the arm, helping verify the approach and grasp.' },
-  { id: 'base', name: 'Mobile base', type: 'velocity', detail: 'Moves the platform. Tools coordinate base commands with manipulation and read back its state.' },
+  { id: 'base', name: 'Mobile base', type: 'locomotion', detail: 'Moves the platform. Control code coordinates base commands with manipulation and reads back its state.' },
   { id: 'torso', name: 'Torso', type: 'joint', detail: 'Positions the upper body to bring the arms into reach, with joint state available as feedback.' },
   { id: 'left-arm', name: 'Left arm', type: 'joint', detail: 'An independently controlled arm that can manipulate an object or reposition a wrist camera.' },
   { id: 'right-arm', name: 'Right arm', type: 'joint', detail: 'Receives the motion command in this example and moves its end effector toward the target.' },
-  { id: 'left-gripper', name: 'Left gripper', type: 'gripper', detail: 'Opens and closes independently of the left arm so tools can compose different grasping workflows.' },
+  { id: 'left-gripper', name: 'Left gripper', type: 'gripper', detail: 'Opens and closes independently of the left arm so control code can compose different grasping workflows.' },
   { id: 'right-gripper', name: 'Right gripper', type: 'gripper', detail: 'Closes after the right arm reaches the target. Device results and observations return to the agent.' },
 ];
 // Coordinates are illustrative, not a calibrated robot model.
@@ -30,7 +30,7 @@ const feedback = [
     <div class="flow-view">
       <svg viewBox="0 0 660 430" role="img" aria-labelledby="device-flow-title device-flow-description">
         <title id="device-flow-title">Camera observations become coordinated robot actions</title>
-        <desc id="device-flow-description">Cameras send observations to the agent, which computes a target position and uses Kinex tools and code to send an arm motion command. The arm reaches the object and the gripper closes. Images, state, and execution results from the devices return to the agent. The animation illustrates one continuous control loop.</desc>
+        <desc id="device-flow-description">Cameras send observations to the agent, which computes a target position and runs a Kinex control graph that sends an arm motion command. The arm reaches the object and the gripper closes. Images, state, and execution results from the devices return to the agent. The animation illustrates one continuous control loop.</desc>
         <defs>
           <marker id="device-feedback-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8z" class="feedback-arrow" /></marker>
           <marker id="device-command-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8z" class="command-arrow" /></marker>
@@ -52,7 +52,7 @@ const feedback = [
           <text x="42" y="218" class="agent-activity" data-agent-activity>Reads camera observations</text>
           <path d="M24 239H214" class="agent-divider" />
           <text x="42" y="259" class="kinex-label">Kinex</text>
-          <text x="42" y="276" class="agent-subtitle">Writes &amp; runs tools / code</text>
+          <text x="42" y="276" class="agent-subtitle">Writes &amp; runs control code</text>
           <circle cx="193" cy="191" r="3" class="agent-indicator" />
         </g>
         <g transform="translate(300 0) scale(.77)">
@@ -176,7 +176,7 @@ const feedback = [
         const labels: Record<string, [string, string]> = {
           observe: ['Reads camera observations', 'Cameras send images and depth to the agent.'],
           compute: ['Computes target position', 'The agent estimates the target position and plans the approach.'],
-          move: ['Runs arm motion code', 'Kinex tools send the motion command; the arm moves toward the target.'],
+          move: ['Runs arm motion code', 'The control graph sends the motion command; the arm moves toward the target.'],
           grasp: ['Commands the grasp', 'The gripper closes after the arm reaches the target.'],
           feedback: ['Checks device feedback', 'Images, measured state, and execution results return to the agent.'],
           reset: ['Ready for the next action', 'The agent uses the feedback to decide what to do next.'],
