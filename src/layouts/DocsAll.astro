@@ -1,0 +1,24 @@
+---
+// Every doc of one tree on one page: easy to grep, print, or paste into an agent.
+import Doc from './Doc.astro';
+import { render } from 'astro:content';
+import { getDocs, docHref, type DocCollection } from '../lib/content';
+
+interface Props { collection: DocCollection; version: string; latest?: string }
+const { collection, version, latest } = Astro.props;
+const docs = await getDocs(collection);
+const rendered = await Promise.all(docs.map(async (d) => ({ d, r: await render(d) })));
+const headings = docs.map((d) => ({ depth: 2, slug: `p-${d.id}`, text: d.data.label ?? d.data.title }));
+---
+<Doc docs={docs} title={`Kinex v${version} docs: Single-page view`} description={`${docs.length} pages. ⌘F away from anything.`} headings={headings} current="__all" searchable={false} collection={collection} latest={latest}>
+  {rendered.map(({ d, r: { Content } }) => (
+    <section class="page">
+      <h2 id={`p-${d.id}`}>{d.data.title} <a class="perma" href={docHref(d)}>→ Page</a></h2>
+      <Content />
+    </section>
+  ))}
+</Doc>
+<style>
+  .page h2 { font-size: 22px; }
+  .perma { font-size: 12px; font-weight: 400; text-decoration: none !important; }
+</style>

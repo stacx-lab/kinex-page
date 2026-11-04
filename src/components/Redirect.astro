@@ -1,0 +1,20 @@
+---
+// A moved page: forwards to its new location, keeping the query and anchor.
+interface Props { to: string }
+const { to } = Astro.props;
+const canonical = new URL(to, Astro.site).href;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Moved · Kinex</title>
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={canonical} />
+    <script is:inline define:vars={{ to }}>location.replace(to + location.search + location.hash);</script>
+    <noscript><meta http-equiv="refresh" content={`0; url=${to}`} /></noscript>
+  </head>
+  <body>
+    <p>This page moved to <a href={to}>{to}</a>.</p>
+  </body>
+</html>

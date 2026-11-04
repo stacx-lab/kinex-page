@@ -1,0 +1,17 @@
+---
+// v1.0 pages without a current equivalent forward to their archived copy, or
+// to their renamed successor listed in `archive.moved`.
+import Redirect from '../../components/Redirect.astro';
+import { getDocs, docHref, successor } from '../../lib/content';
+
+export async function getStaticPaths() {
+  const current = new Set((await getDocs()).map((d) => d.id));
+  return (await getDocs('docsV1_0'))
+    .filter((d) => d.id !== 'index' && !current.has(d.id))
+    .map((d) => ({ params: { moved: d.id }, props: { to: successor(d.id, current) ?? docHref(d) } }));
+}
+
+interface Props { to: string }
+const { to } = Astro.props;
+---
+<Redirect to={to} />

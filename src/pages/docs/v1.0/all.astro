@@ -1,0 +1,6 @@
+---
+import DocsAll from '../../../layouts/DocsAll.astro';
+import { archive } from '../../../config';
+import { url } from '../../../lib/url';
+---
+<DocsAll collection="docsV1_0" version={archive.version} latest={url('/docs/all/')} />

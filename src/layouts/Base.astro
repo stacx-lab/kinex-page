@@ -8,8 +8,8 @@ import Analytics from '../components/Analytics.astro';
 import { site } from '../config';
 import { url } from '../lib/url';
 
-interface Props { title?: string; description?: string; bodyClass?: string; footer?: boolean; article?: boolean }
-const { title, description = site.description, bodyClass = '', footer = true, article = false } = Astro.props;
+interface Props { title?: string; description?: string; bodyClass?: string; footer?: boolean; article?: boolean; noindex?: boolean }
+const { title, description = site.description, bodyClass = '', footer = true, article = false, noindex = false } = Astro.props;
 const fullTitle = title ? `${title} · Kinex` : 'Kinex · One Agent for Any Robot';
 const canonical = new URL(Astro.url.pathname === '/404/' ? '/404.html' : Astro.url.pathname, Astro.site);
 const website = {
@@ -28,7 +28,7 @@ const website = {
     <Fonts />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    {Astro.url.pathname === '/404/' && <meta name="robots" content="noindex" />}
+    {(noindex || Astro.url.pathname === '/404/') && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href={url('/img/kinex-logo-day.svg')} />
     <meta property="og:title" content={fullTitle} />
