@@ -4,7 +4,7 @@ description: Choose a model, talk to the agent, set how much it asks for approva
 group: Guides
 order: 10
 label: Working with the agent
-sources: ["README.md", "docs/agent-integration.md", "src/application.ts", "src/auth.ts", "src/arguments.ts", "src/sessions.ts", "src/settings.ts", "src/export.ts", "src/resume-hint.ts", "src/integration/interaction.ts", "src/integration/extension.ts"]
+sources: ["README.md", "docs/agent-integration.md", "src/application.ts", "src/auth.ts", "src/arguments.ts", "src/sessions.ts", "src/settings.ts", "src/export.ts", "src/resume-hint.ts", "src/integration/interaction.ts", "src/integration/extension.ts", "src/integration/compaction.txt", "src/integration/default-extensions.ts"]
 ---
 
 Kinex is built on the [Pi](https://pi.dev) coding agent (`@earendil-works/pi-coding-agent`, bundled at version 1.2.0, so there's nothing extra to install). Pi provides the agent itself: the model connection, the conversation loop, the terminal UI, sessions, compaction and the everyday coding tools (`read`, `write`, `edit`, `bash`, `grep`, `find`, `ls`). Kinex adds the robotics on top: devices, robotics tools and skills, permissions and recording.
@@ -13,7 +13,7 @@ Apart from approvals and devices, everything on this page works the way it does 
 
 ## Choosing a model
 
-The agent model is the LLM that reads your requests and decides what to do. It's separate from the perception and policy models your robot uses, which are [devices](/docs/devices/) (see [Using vision models as tools](/docs/vision/) and [Using VLAs as tools](/docs/vla/)). Slash commands like `/ping` don't need a model at all.
+The agent model is the LLM that reads your requests and decides what to do. It's separate from the perception and policy models your robot uses, which are [devices](/docs/devices/) (see [Using vision models](/docs/vision/) and [Using VLAs](/docs/vla/)). Slash commands like `/ping` don't need a model at all.
 
 ```text
 /login              # connect a provider, with an OAuth subscription or an API key (or set one of the API-key environment variables Pi recognizes)
@@ -50,7 +50,7 @@ Start the model server, then choose `local/your-model-name` with `/model`. See P
 
 ### Where credentials are kept
 
-Credentials live in `~/.local/share/kinex/agent/auth.json`, with a link at `~/.config/kinex/agent/auth.json` so every part of Kinex shares one login. If that location already holds different credentials, Kinex stops with `AuthPathConflict` rather than overwrite them; merge the two files and restart. Keep agent credentials out of device profiles. Model devices read their own keys from environment variables.
+Credentials live in `~/.local/share/kinex/agent/auth.json`, with a link at `~/.config/kinex/agent/auth.json` so every part of Kinex shares one login. If that location already holds different credentials, Kinex stops with `AuthPathConflict` rather than overwrite them; merge the two files and restart. Keep credentials out of device profiles: a device that needs a key, such as a hosted model, reads it from an environment variable.
 
 ## Talking to the agent
 
@@ -81,7 +81,7 @@ Switch with `/mode` (or `/mode auto`), or start in a mode with `kinex --auto` or
 
 When Kinex asks, you can **allow once**, **allow for the rest of the session**, or **deny**. Denying stops the rest of that turn, so related calls don't run without you. Switching mode clears the approvals you've granted for the session.
 
-In scripted runs without a terminal, nobody is there to answer, so in `ask` mode anything that would prompt is denied and the agent's questions are answered from the evidence it already has. See [Kinex runtime](/docs/runtime/#permissions) for what each permission covers and how to set rules.
+In scripted runs without a terminal, nobody is there to answer, so in `ask` mode anything that would prompt is denied and the agent's questions are answered from the evidence it already has. See [Permissions](/docs/control-graph/#permissions) for what each permission covers and how to set rules.
 
 ## Sessions
 
@@ -110,7 +110,7 @@ Pi keeps each session as a tree, so you can go back and try something different 
 
 ### What happens to your devices
 
-Changing session within the same workspace (`/new`, `/resume`, `/fork`) keeps your devices connected, so you don't have to load them again. It does cancel any call still running, reset the permissions you granted for the session and finish any active recording. Quitting Kinex or switching to another workspace disconnects the devices Kinex started; services you started yourself, like a simulator, keep running.
+Changing session within the same workspace (`/new`, `/resume`, `/fork`) keeps your devices connected, so you don't have to load them again. It does cancel any call still running, reset the permissions you granted for the session and finish any active recording. Quitting Kinex or switching to another workspace stops the nodes Kinex started; anything it only connected to, like a simulator or your robot's own ROS stack, keeps running.
 
 ## Context and compaction
 
@@ -121,7 +121,7 @@ Long conversations eventually fill the model's context window. Compaction summar
 /compact keep the calibration results in detail   # tell it what to preserve
 ```
 
-Kinex makes sure compaction doesn't lose track of the robot. Before every request it gives the agent a fresh picture of the workspace: loaded devices, how to use them, and the Python environment. That picture is rebuilt in full after compaction. The robotics guidance asks the agent to avoid unnecessary tool calls and motion, account for intended contact, and check the full path for unintended collisions. Command acceptance or arrival alone does not establish task success. Old observations in the history are still just history, though. When the current state matters, the agent should read the device again.
+Kinex makes sure compaction doesn't lose track of the robot. The summary keeps device names, calibration values and actions whose outcome isn't confirmed yet, and Kinex restores its robotics instructions and workspace context afterwards. Old observations in the history are still just history, though. When the current state matters, the agent reads the device again.
 
 The footer shows how long you've been actively working in the session, not counting idle time.
 

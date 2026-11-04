@@ -1,139 +1,128 @@
 ---
-title: Using VLAs as tools
-description: Register a vision-language-action model as a device, run it with run_policy, and control bounded observation/action cycles with Python exec.
+title: Using VLAs
+description: Register a vision-language-action model as a model device, and run it with helpers.run_policy in an exec program that loops over observations and action chunks.
 group: Guides
 order: 40
-label: Using VLAs as tools
-sources: ["packages/core/README.md", "docs/tools-and-skills.md", "packages/core/assets/builtin/tool/run-policy/tool.yaml", "packages/core/assets/builtin/device/templates/model/DEVICE.md", "packages/core/assets/builtin/skill/setup-device/SKILL.md"]
+label: Using VLAs
+sources: ["docs/devices.md", "packages/core/assets/builtin/device/fastwam/DEVICE.md", "packages/core/assets/builtin/device/templates/model/DEVICE.md", "packages/core/src/workflows/register.txt", "packages/core/assets/python/kinex/helpers/policy.py", "packages/core/assets/python/kinex/helpers/helpers.txt"]
 ---
 
-A vision-language-action model (VLA) takes camera images and a task description and predicts the robot's next moves. In Kinex, a VLA is not the agent; it's a tool the agent uses. The agent decides when to run the policy, on which devices, for how long, and when to stop.
+A vision-language-action model (VLA) takes camera images, the robot's state and a task description, and predicts the robot's next moves. In Kinex, a VLA is not the agent; it's a device the agent's programs use. The agent decides when to run the policy, on which devices, for how long, and when to stop.
 
 This takes three pieces:
 
-1. **The VLA becomes a device.** It's registered like a camera or an arm, as a `model` device with an `infer` operation.
-2. **`run_policy` runs it once.** It sends one observation to the model and passes the predicted actions to the robot.
-3. **Python `exec` coordinates the cycle.** It gathers fresh observations, runs bounded policy chunks, checks feedback and returns images for the agent to assess.
-
-This page uses [StarVLA](https://github.com/starVLA/starVLA) on a RoboTwin dual-arm robot as the example.
+1. **The VLA becomes a device.** It's a `model` device whose `infer` service takes an observation and returns actions.
+2. **`helpers.run_policy` runs it once.** It sends one observation to the model and sends the predicted actions to the robot.
+3. **An `exec` program loops.** It gathers fresh observations, runs bounded action chunks and returns images for the agent to assess.
 
 ## 1. Register the VLA as a device
 
-Let the agent set it up. Tell `/register` which model you want and what robot it's for:
+Kinex bundles [FastWAM](https://github.com/yuantianyuan01/FastWAM), with variants for LIBERO and RoboTwin. Tell `/register` which variant you want and where to run it:
 
 ```text
-/register model StarVLA/Qwen3-VL-OFT-RoboTwin2-All policy for the dual-arm RoboTwin robot
+/register fastwam libero_uncond_2cam224 on cuda:0
 ```
 
-The agent follows the built-in `setup-device` skill. It reads the model's documentation, downloads and pins the weights, builds an isolated Python environment for the model, writes a driver and a profile, and checks what it can without loading the model. The device is left unloaded. Loading it puts the model on the GPU, so load it only when you need it:
+| Variant | Cameras | State | Action |
+| --- | --- | --- | --- |
+| `libero_uncond_2cam224` | 2 | 8 | 7 |
+| `libero_optional_idm_2cam224` | 2 | 8 | 7 |
+| `robotwin_uncond_3cam_384` | 3 | 14 | 14 |
+
+FastWAM needs a CUDA GPU, and setup downloads about 26 GB of weights. The agent installs the model into the device's own folder, writes its profile and leaves it unloaded. Loading it puts the model on the GPU, so load it only when you need it:
 
 ```text
-/load starvla
+/load fastwam
 ```
 
-The result is an ordinary device in `.kinex/devices/starvla/`. Its profile records where the model runs and, most importantly, what it takes in and gives back:
+The result is an ordinary device in `.kinex/devices/fastwam/`. Its profile describes what `infer` takes and returns:
 
 ```yaml
-name: starvla
+name: fastwam
 type: model
-access:
-  connection: {kind: process, compute: {kind: cuda, index: 3}}
-intrinsics:
-  family: starVLA
-  variant: Qwen3-VL-OFT-RoboTwin2-All
-  operations:
-    - name: infer
-      input:   # three camera images (file paths) and a task instruction
-        obs: {head_image, left_image, right_image}
-        task: string
-      output:  # 50 steps × 14 values
-        actions: [[left_arm ×6, left_gripper, right_arm ×6, right_gripper], ...]
+operations:
+  infer:
+    description: "Predict an action chunk. Input {obs: {images: camera image paths in the evaluator's orientation, state: proprioception}, task: instruction, seed: default 0, num_inference_steps: default 10, compile_action_infer: default false}. Output {actions: 32 rows of 7 LIBERO actions (xyz deltas within ±0.05 m, rotation deltas within ±0.5 rad, gripper -1 open or +1 close), inference_s}."
+    transport: service
+    direction: input
+    endpoint: /kinex/fastwam/infer
+    type: kinex_interfaces/srv/Json
+variant: libero_uncond_2cam224
+# ...
 ```
 
-*(Abridged; the real profile spells this out as JSON Schema.)*
+The model only predicts. It never moves the robot itself.
 
-Each prediction is a chunk of 50 actions. Each action holds 14 numbers: six joint positions and a gripper value for each arm. The model only predicts. It never moves the robot itself.
+### Bring your own policy
 
-## 2. Run the policy once with `run_policy`
+To use another VLA, register a `model` device and describe it to the agent:
 
-`run_policy` connects the model to the robot. It sends the observation and task to the model, splits each predicted action across the devices you list, and sends the result to them:
-
-```json
-{
-  "model": "starvla",
-  "observation": {
-    "head_image": "/tmp/obs/head.png",
-    "left_image": "/tmp/obs/left.png",
-    "right_image": "/tmp/obs/right.png"
-  },
-  "task": "place the bottle in the basket",
-  "command": [
-    {"device": "left_arm"},
-    {"device": "left_gripper"},
-    {"device": "right_arm"},
-    {"device": "right_gripper"}
-  ],
-  "action_hz": 25,
-  "max_actions": 25
-}
+```text
+/register model my-policy served at http://gpu-box:8000, 7-dim end-effector deltas plus gripper
 ```
 
-- **`command`** lists the devices in the same order as the model's output. Here that's 6 values for `left_arm`, 1 for `left_gripper`, and so on. Values are sent as absolute joint positions by default. A model that predicts end-effector poses or pose changes can set `"space": "pose"` or `"pose_delta"`, and Kinex converts them to joint positions with inverse kinematics.
-- **`action_hz`** is how fast the actions are played back.
-- **`max_actions`** limits how much of the chunk is used. Here only the first 25 of the 50 actions, one second of motion, are sent. The robot then gets a fresh prediction instead of following a stale plan.
+Any model works with `helpers.run_policy` as long as it serves a JSON `infer` operation that takes `obs` (and `task`) and returns `actions`, a list of action vectors.
 
-`run_policy` returns as soon as the actions are sent, reporting how many went out and for how long. It doesn't wait for the motion to finish; that's the loop's job.
+## 2. Run the policy once with `helpers.run_policy`
 
-## 3. Observe, act and inspect with `exec`
-
-Use Python variables and a bounded loop to gather observations and run policy chunks. This example runs at most three chunks, then stops owned motion and returns all three camera views for the agent's next decision:
+`helpers.run_policy` connects the model to the robot. It sends the observation and task to the model, splits each predicted action across the devices you list, and sends them their share. For the LIBERO variant, each action is a 6-value end-effector change for the arm followed by one gripper value:
 
 ```python
-from kinex import call, device, finish, stop_owned
-
-cameras = {"head_image": "head_camera", "left_image": "left_camera",
-           "right_image": "right_camera"}
-actuators = ["left_arm", "left_gripper", "right_arm", "right_gripper"]
-commands = [{"device": name} for name in actuators]
-chunks = []
-try:
-    for _ in range(3):
-        for name in actuators:
-            state = device(name)
-            if state["faults"]:
-                raise RuntimeError(f"{name}: {state['faults']}")
-        observation = {
-            key: device(camera, args={"output": "file"})["file"]
-            for key, camera in cameras.items()
-        }
-        chunk = call("run_policy", model="starvla", observation=observation,
-                     task="place the bottle in the basket", command=commands,
-                     action_hz=25, max_actions=25)
-        if chunk["ik_failure"] or chunk["actions_submitted"] == 0:
-            raise RuntimeError(f"policy chunk rejected: {chunk}")
-        chunks.append(chunk)
-        device("world", "wait", {"duration_s": chunk["duration_s"]})
-finally:
-    stop_owned()
-
-feedback = {name: device(name) for name in actuators}
-for name, state in feedback.items():
-    if state["faults"]:
-        raise RuntimeError(f"{name}: {state['faults']}")
-observations, images = [], []
-for camera in cameras.values():
-    frame = device(camera, args={"output": "file"})
-    observations.append({"deviceID": camera, "timestamp": frame["timestamp"]})
-    images.append(frame["file"])
-finish({"reason": "inspection required", "chunks": chunks,
-        "feedback": feedback, "observations": observations}, file=images)
+result = await helpers.run_policy(
+    io, "fastwam",
+    {"images": [agentview_png, wrist_png], "state": state},  # what fastwam's infer asks for
+    [{"device": "arm", "space": "pose_delta"}, {"device": "gripper"}],
+    task="put the bowl on the plate", action_hz=10, max_actions=8)
 ```
 
-Adapt the camera names, action order and feedback checks to the actual model and robot. The three-chunk limit bounds this example; it does not establish task success. If each chunk needs visual interpretation, run just one and return images before continuing. Ask the agent to run a short policy segment, inspect whether the bottle reached the basket, and decide what comes next.
+Here `io` comes from `async with communication() as io`, the images are paths saved with `helpers.save_image`, and `state` is the robot state the model expects.
 
-- **Timing.** `run_policy` returns immediately with `actions_submitted`, `duration_s`, `execution_ids` and `ik_failure`. Wait on the `world` clock for the returned duration before assessing the resulting state. In a stepped simulator, inference time does not advance the world.
-- **Rejected actions.** IK rejection can return normally with a shortened or empty valid prefix. Inspect `ik_failure`; a successful tool call does not imply the whole chunk was accepted.
-- **Replanning.** A new chunk can replace the remaining references of the previous one. Choose an explicit shorter world-wait interval if the task needs replanning during execution.
-- **Cleanup.** `stop_owned()` in `finally` requests a stop on every exit. Runtime failure, timeout or cancellation also triggers cleanup attempts; successful execution alone does not stop motion.
+| Argument | Meaning |
+| --- | --- |
+| `model` | The model device to run |
+| `observation` | Sent to the model as `obs`; its shape is whatever the model's `infer` description asks for. |
+| `task` | Optional instruction for the model. |
+| `inference_args` | Optional extra model inputs, such as FastWAM's `num_inference_steps`. |
+| `command` | Devices in the order their values appear in each action. Each entry is `{device, space?, frame?, target_frame?}`. |
+| `space` | `device` (default): joint positions, or a gripper value from -1 (release) to +1 (grip). `pose` or `pose_delta`: end-effector targets, converted to joint positions with inverse kinematics. |
+| `frame`, `target_frame` | For pose spaces: the reference frame (default the arm's base) and the controlled frame (default the arm's tip link). |
+| `action_hz` | Actions per second of world time, 10 by default. |
+| `max_actions` | Send at most this many actions from the chunk, so the robot gets a fresh prediction instead of following a stale plan. |
+| `world` | The world device used for pacing, `world` by default. |
 
-The former `closed_loop` and `settled` tools are no longer bundled. See [Feedback control](/docs/custom-tools/#feedback-control) for a measured joint-target check, and [vision models](/docs/vision/) for perception-driven motion.
+It returns `actions_submitted`, `duration_s` (how long the actions take in world time) and `ik_failure`. When inverse kinematics rejects an action, only the actions before it are sent, and `ik_failure` says which device and action failed; otherwise it's `null`.
+
+## 3. Loop with `exec`
+
+Run several chunks in one program. This example assumes a policy device named `policy` whose `infer` takes two camera images and the arm's joint positions. It runs at most five chunks, then returns both camera views for the agent's next decision:
+
+```python
+import asyncio
+from kinex import communication, finish, helpers
+
+CAMERAS = ("camera_scene", "camera_wrist")
+COMMAND = [{"device": "arm"}, {"device": "gripper"}]
+
+async def main():
+    async with communication() as io:
+        arm = io.subscribe("arm.joint_state", depth=1)
+        for chunk in range(5):
+            images = [helpers.save_image((await helpers.camera_frame(io, camera))[0])
+                      for camera in CAMERAS]
+            state = list((await arm.next(timeout_s=2)).position)
+            result = await helpers.run_policy(
+                io, "policy", {"images": images, "state": state}, COMMAND,
+                task="put the bowl on the plate", action_hz=10, max_actions=8)
+            if not result["actions_submitted"]:
+                break
+        await io.request("world.wait", duration_s=0.5)  # let the last chunk settle
+        files = [helpers.save_image((await helpers.camera_frame(io, camera))[0])
+                 for camera in CAMERAS]
+    finish({"chunks": chunk + 1, "last": result}, file=files)
+
+asyncio.run(main())
+```
+
+Adapt the camera names, observation and command order to your model and robot. A good pattern is to ask the agent to run a short policy segment, look at the returned images, and decide what comes next. In a stepped simulator, the world doesn't advance while the model is thinking.
+
+See [vision models](/docs/vision/) for perception-driven motion.

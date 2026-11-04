@@ -1,122 +1,112 @@
 ---
 title: Playing with simulators
-label: Simulators
-description: Launch a simulator task through RoboEnv and drive its robot as Kinex devices.
+description: Run a simulator task with rosbridge and drive its robot as Kinex devices.
 group: Get started
 order: 30
-sources: ["README.md", "docs/devices.md", "docs/commands.md", "packages/core/assets/builtin/device/templates/world/DEVICE.md", "packages/core/src/commands.ts"]
+label: Simulators
+sources: ["README.md", "docs/communication.md", "docs/commands.md", "rosbridge: README.md", "rosbridge: docs/README.md", "rosbridge: docs/kinex.md", "rosbridge: src/rosbridge/cli/main.py", "rosbridge: simulators/*/tasks.toml"]
 ---
 
-[RoboEnv](https://github.com/stacx-lab/RoboEnv) runs simulator tasks (RoboCasa, LIBERO, RoboTwin, RoboDojo, BEHAVIOR, Isaac Lab, SIMPLE, ABC) and exposes their robots as Kinex devices. Kinex itself ships no simulator engine — just the device contracts RoboEnv implements.
+[rosbridge](https://github.com/stacx-lab/rosbridge) runs public robotics simulators as ROS 2 graphs that speak the Kinex device contract. It also exports a ready-made Kinex workspace for each simulated robot. The agent drives a simulated robot through the same device interfaces as real hardware, so whatever works in simulation carries over.
 
-Assumes Kinex is installed (see [Install and run](/docs/#install-and-run)).
+| Simulator | Robot ID (`rosbridge setup`) | Example task (`rosbridge launch`) |
+| --- | --- | --- |
+| LIBERO | `libero/libero-panda-tabletop` (also `-floor`, `-kitchen`, `-living-room`, `-study`) | `libero/libero-spatial-01` |
+| RoboTwin | `robotwin/robotwin-aloha-agilex` | `robotwin/handover-block-aloha-agilex` |
+| RoboCasa | `robocasa/robocasa-panda-omron` | `robocasa/pick-place-counter-to-cabinet` |
+| RoboDojo | `robodojo/robodojo-arx-x5` | `robodojo/stack-bowls` |
+| ABC | `abc/abc-yam` | `abc/hang-mug-on-mug-rack` |
+| BEHAVIOR | `behavior/behavior-r1pro`, `behavior-g1/behavior-g1-sharpa`, `behavior-dex/behavior-r1pro-sharpa` | `behavior/turning-on-radio` |
 
-## 1. Launch a simulator
+This guide uses LIBERO. The steps are the same for every simulator. Kinex needs to be installed first (see [Install and run](/docs/#install-and-run)).
 
-RoboEnv runs from a source checkout on Linux with Git and [uv](https://docs.astral.sh/uv/). Clone and bootstrap it once:
+## 1. Install rosbridge
+
+You need Linux x86-64, Git, [uv](https://docs.astral.sh/uv/), [Pixi](https://pixi.sh) and an EGL-capable graphics driver. RoboDojo and BEHAVIOR run on Isaac Sim and need an NVIDIA GPU. No system ROS install is needed.
 
 ```sh
-git clone https://github.com/stacx-lab/RoboEnv.git
-cd RoboEnv
+git clone https://github.com/stacx-lab/rosbridge.git
+cd rosbridge
 bash tools/bootstrap.sh
 source .venv/bin/activate
+rosbridge prepare libero          # download the simulator and its assets, once
 ```
 
-Bootstrap installs the `roboenv` CLI into a Python 3.12 environment. Activate it in each new shell, or call `.venv/bin/roboenv` directly.
-
-Choose a task and its paired robot/device configuration:
+To browse what is available:
 
 ```sh
-roboenv tasks list --simulator robocasa
-roboenv robots list --simulator robocasa
+rosbridge robots list
+rosbridge tasks list --simulator libero --robot libero/libero-panda-tabletop
 ```
 
-Both commands print one ID per line. Omit `--simulator` to see all entries, or add `--json` for structured output. `launch` takes a **task ID**; `setup` takes its **robot ID**, which exports the robot's full device collection. Read `robot:` in RoboEnv's `catalog/tasks/<task-id>/task.yaml` for the exact pairing. A simulator may have several robots or scene configurations, so sharing a simulator name is not enough.
+## 2. Export a Kinex workspace
 
-| Task ID for `roboenv launch` | Robot ID for `roboenv setup` |
+Each task runs on one robot. Export a workspace for that robot, on a ROS domain of your choice:
+
+```sh
+rosbridge setup libero/libero-panda-tabletop --directory ~/kinex-libero --domain-id 83
+```
+
+This writes `~/kinex-libero/.kinex/`. It contains the robot's devices (`arm`, `gripper`, `camera_agentview`, `camera_wrist` and `world`), already calibrated, and a `kinex.json` that selects ROS 2 Jazzy. The devices use the simulator's own topics and services directly. Setup runs offline; it doesn't start the simulator or Kinex.
+
+## 3. Launch the task
+
+Launch a task for the same robot, **on the same domain**:
+
+```sh
+rosbridge launch libero/libero-spatial-01 --execution-mode stepped --domain-id 83
+```
+
+Leave it running. Press Ctrl-C to stop the simulator.
+
+| `--execution-mode` | The simulation… |
 | --- | --- |
-| `robocasa/load-condiments-in-fridge` | `robocasa/robocasa-panda-omron` |
-| `robotwin/handover-block-aloha-agilex` | `robotwin/robotwin-aloha-agilex` |
-| `abc/hang-mug-on-mug-rack` | `abc/abc-yam` |
+| `realtime` (default) | runs continuously, paced by the wall clock. |
+| `stepped` | advances only while the agent waits on the world clock, so it is paused while the agent thinks. |
 
-Prepare the simulator, then launch the task. This page uses the RoboCasa pair:
+If you leave out `--domain-id`, `launch` picks a domain on its own and Kinex won't find the simulator. Always pass the same `--domain-id` to `setup` and `launch`.
 
-```sh
-roboenv prepare robocasa
-roboenv launch robocasa/load-condiments-in-fridge --port 8123
-```
+## 4. Drive the robot with Kinex
 
-`prepare` installs the simulator's isolated interpreter and downloads its assets (RoboCasa needs about 10 GB). It is only needed once per simulator. Wait for `Ready` and leave `launch` running; Ctrl+C stops the environment.
-
-For another simulator, run `roboenv prepare <name>` and pick a task from `roboenv tasks list --simulator <name>`. GPU prerequisites and per-simulator assets are in RoboEnv's [setup guide](https://github.com/stacx-lab/RoboEnv/blob/main/docs/setup.md).
-
-## 2. Create a Kinex workspace
-
-In a second terminal, activate the same environment and create a workspace:
+In a second terminal:
 
 ```sh
-source /path/to/RoboEnv/.venv/bin/activate         # put the roboenv CLI on PATH
-mkdir -p kinex-sim-workspace                       # the Kinex workspace directory
-cd kinex-sim-workspace
-roboenv setup robocasa/robocasa-panda-omron         # export the robot into .kinex/
-export ROBOENV_ENDPOINT=http://127.0.0.1:8123       # where the drivers find the running scene
-roboenv describe --endpoint "$ROBOENV_ENDPOINT"   # read the initialized task instruction
+cd ~/kinex-libero
 kinex
 ```
 
-`roboenv setup <simulator/robot>` copies a ready-made robot configuration from RoboEnv's catalog into the current directory's `.kinex/`, creating it if needed:
-
-- `workspace.yaml`: the robot manifest.
-- `devices/`: one profile and thin driver per device. For the RoboCasa Panda–Omron that is `arm`, `base`, `torso`, `gripper`, three cameras and `world`.
-
-`setup` exports devices without installing or launching a simulator. The configuration is task-independent, so one workspace serves every task with the same robot ID. `roboenv robots list --simulator robocasa` lists robot IDs for RoboCasa; `roboenv setup --list` remains available for listing all robots. For a different robot ID, create a new workspace or save custom configuration before `roboenv setup ROBOT_ID --force`, which replaces the manifest and entire device collection.
-
-`ROBOENV_ENDPOINT` tells the drivers which running scene to connect to; match the `launch` port.
-
-## 3. Inspect devices
-
-Inside the Kinex session:
+Load and check the devices. The first load also prepares Kinex Python, which takes a few minutes:
 
 ```text
-/devices
 /load all
 /ping all
 ```
 
-`/devices` shows saved activation intent (`loaded`), not liveness. `/ping` checks live status without starting anything.
+Then give the task. rosbridge doesn't pass the task's instruction to Kinex; you write the objective in your prompt. The task name tells you the goal. For LIBERO, `simulators/libero/tasks.toml` lists each task's `task_name`.
 
-## 4. Give it a task
+> Pick up the black bowl between the plate and the ramekin and place it on the plate.
 
-Give Kinex the running task's `task.instruction` and `task.context` from `roboenv describe`. For the example above, ask it to inspect the scene and complete that fridge task using the paired robot's devices. To inspect the scene first:
+Approve the device reads and scripts as they come up, or switch approval modes with `/mode` (see [approval modes](/docs/agent/#approval-modes)). Camera images come back attached to the tool results, and Ctrl+O expands the tool calls.
 
-```text
-Look through the robot's cameras and describe what is in the scene.
-```
+## 5. Check the outcome
 
-Approve the device read when asked (or switch with `/mode`; see [Approval modes](/docs/agent/#approval-modes)). Camera images come back attached to the tool result. Press **Ctrl+O** to expand tool calls and check the raw observation against the agent's answer.
-
-## 5. Record the episode
-
-Add `--record` when you launch to film the episode from RoboEnv's spectator cameras:
+rosbridge judges the episode with the benchmark's own success criteria. The agent never sees the result. From the rosbridge checkout, with its `.venv` active:
 
 ```sh
-roboenv launch robocasa/load-condiments-in-fridge --port 8123 --record                         # under the run's evidence/recording/
-roboenv launch robocasa/load-condiments-in-fridge --port 8123 --record ./recordings/episode-1  # into this directory
+rosbridge judge --json
 ```
 
-You get one MP4 per view; it needs `ffmpeg` on `PATH`. More options: RoboEnv's [spectator recording guide](https://github.com/stacx-lab/RoboEnv/blob/main/docs/spectator.md).
+A successful episode, or one that hits its step limit, pauses the simulation and rejects new commands until the world is reset.
 
-## 6. Finish and Reconnect
+## Recording
 
-Leave Kinex with `/quit`. Then stop the simulator: press **Ctrl+C** in the `launch` terminal, or, if you launched with `--detach`, run `roboenv stop <run-id>` from the RoboEnv checkout with the run ID that `launch` printed (add `--project /path/to/RoboEnv` when running it elsewhere).
+- `rosbridge launch … --record ./recordings/episode-1` saves spectator videos of the scene. `--record-type bag` or `both` also saves a ROS bag.
+- Kinex's [`/record`](/docs/recording/) records what the agent's devices see and do in the Kinex workspace.
 
-After restarting the simulator or changing profiles, reconnect the devices in Kinex:
+## Running in the background and reconnecting
 
-```text
-/unload all
-/load all
-```
+`rosbridge launch … --detach` returns once the simulator is ready and prints its run ID. Use `rosbridge status`, `rosbridge judge` and `rosbridge stop` with that ID.
 
-After upgrading Kinex, refresh the copied RoboEnv profiles and drivers together (`roboenv setup <simulator/robot> --force`) and restart the simulator.
+If you restart the simulator, reconnect Kinex with `/unload all` followed by `/load all`. A workspace belongs to one robot. To use a different robot, export another workspace with `rosbridge setup`.
 
-More tasks and connection details: RoboEnv's [Kinex walkthrough](https://github.com/stacx-lab/RoboEnv/blob/main/docs/kinex-local.md).
+For each simulator's devices, assets and options, see the [rosbridge documentation](https://github.com/stacx-lab/rosbridge/blob/main/docs/README.md).

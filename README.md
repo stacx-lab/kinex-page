@@ -29,12 +29,16 @@ Search is available in the production preview after building.
 | `src/pages/index.astro` | `/` |
 | `src/content/docs/*.{md,mdx}` | `/docs/` and `/docs/<slug>/` |
 | `src/pages/docs/all.astro` | `/docs/all/` |
+| `src/content/docs-v1.0/*.{md,mdx}` | `/docs/v1.0/` and `/docs/v1.0/<slug>/` (archived v1.0.0 docs) |
+| `src/pages/docs/v1.0/all.astro` | `/docs/v1.0/all/` |
+| `src/pages/docs/[moved].astro` | `/docs/<slug>/` for v1.0 pages with no current page (redirects) |
 | `public/img/`, `public/media/`, `public/video/` | `/img/`, `/media/`, `/video/` |
 | Generated Pagefind index | `/pagefind/` |
 
-Edit documentation here going forward. Root-relative documentation links use
+Edit documentation here going forward. The pages describe the Kinex version in
+`src/config.ts` (`site.version` and `site.sourceRef`). Root-relative documentation links use
 `/docs/<slug>/`. Shared site facts are in `src/config.ts`; landing-page data is in
-`src/data/`. The Blog navigation link points to the lab's existing blog.
+`src/data/`.
 The original gallery production sources remain in `stacx-lab.github.io/gallery/`.
 This repository includes the published media and the two tutorial videos imported
 by the docs in `gallery/.masters/`. Those two masters use Git LFS, matching the
@@ -46,6 +50,19 @@ Compressed MP4/WebM delivery files in `public/` stay in ordinary Git. Keep MP4s
 in H.264/yuv420p with fast-start metadata; retain WebM alternatives and poster
 images for gallery videos. Players use `preload="none"` to avoid downloading
 videos before playback. The build is independent of the lab checkout.
+
+## Archived docs
+
+`src/content/docs-v1.0/` is a frozen copy of the v1.0.0 documentation, and
+`src/components/v1.0/` holds the diagrams it imports. Don't edit either.
+Archived pages show a banner that links to their current page, carry `noindex`,
+and are kept out of the sitemap and search. A v1.0 page with no current page of
+the same slug (such as `robotstudio`) gets a redirect stub at `/docs/<slug>/`
+that forwards to its archived copy, keeping query strings and anchors. When a
+current page replaces a v1.0 page under a new slug, map the old slug to the new
+one in `archive.moved` in `src/config.ts`. Keep the media, the `gallery/.masters/`
+videos and the `prose.css` classes the archived pages use. `npm run check`
+verifies all three route sets.
 
 ## GitHub Pages and domain setup
 

@@ -1,10 +1,10 @@
 ---
 title: CLI reference
-description: Every `kinex` shell command and option in v1.0.0.
+description: Every `kinex` shell command and option in v1.1.0.
 group: Reference
 order: 10
 label: CLI
-sources: ["src/cli.ts", "src/arguments.ts", "src/packages.ts", "docs/commands.md", "docs/distribution.md", "install.sh", "src/upgrade.ts"]
+sources: ["src/cli.ts", "src/arguments.ts", "src/packages.ts", "docs/commands.md", "docs/distribution.md", "install.sh", "src/upgrade.ts", "README.md"]
 ---
 
 Kinex's command line follows the syntax of the Pi coding agent it's built on, with robotics options added and a few Pi options left out. For commands you type inside a session, see [Slash commands](/docs/slash-commands/).
@@ -19,7 +19,7 @@ Kinex's command line follows the syntax of the Pi coding agent it's built on, wi
 | `kinex install <source> [-l]` | Install a Pi package (`npm:`, `git:` or a local path); `-l`/`--local` for this project only |
 | `kinex remove <source> [-l\|--local]` | Remove a package (alias: `uninstall`) |
 | `kinex list` | List installed and bundled packages |
-| `kinex update` | Update Kinex itself (same as `--self`) |
+| `kinex update` | Update Kinex and its bundled Pi SDK (same as `--self`) |
 | `kinex update --extensions` | Update installed packages, keeping version pins |
 | `kinex update <source>` | Update one package |
 | `kinex update --all` | Update Kinex, then all packages |
@@ -115,7 +115,9 @@ The installer:
 - asks before adding `~/.local/bin` to your `PATH`;
 - refuses to overwrite a `kinex` it didn't install, or to hide another `kinex` already on your `PATH`.
 
-`kinex update` only updates installs made by the installer, and never downgrades. After updating, refresh any drivers and tools you copied into a workspace (for example RoboEnv profiles); updates don't rewrite those copies.
+The installer doesn't install Pixi or uv. Install one yourself before Kinex first runs Python; see [Python environment](/docs/control-graph/#python-environment).
+
+`kinex update` updates installer and npm installs of Kinex, and never downgrades. A source checkout is updated with Git and rebuilt instead. Updates don't rewrite device nodes, tools or skills copied into a workspace.
 
 ### Build from source
 
@@ -128,11 +130,11 @@ npm run build
 npm run dev          # run Kinex from source
 ```
 
-Before submitting changes, run the full check (needs Python 3 on Linux or macOS):
+Before submitting changes, install the Python test dependencies and run the full check (needs Node.js ≥ 22.19, Python 3 and Linux or macOS):
 
 ```sh
 python3 -m pip install -r packages/core/test/requirements.txt -r packages/setup/test/requirements.txt
 npm run check
 ```
 
-See [AGENTS.md](https://github.com/stacx-lab/kinex/blob/main/AGENTS.md) for contribution guidelines.
+See [AGENTS.md](https://github.com/stacx-lab/kinex/blob/ade9a7e971b31e0a9b3f284df02e019ecf8db67b/AGENTS.md) for contribution guidelines.

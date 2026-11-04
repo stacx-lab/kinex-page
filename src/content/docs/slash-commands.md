@@ -3,7 +3,7 @@ title: Slash commands
 description: The commands you'll use inside a Kinex session, plus keyboard shortcuts.
 group: Reference
 order: 20
-sources: ["docs/commands.md", "packages/core/src/commands.ts", "packages/setup/src/integration.ts", "src/integration/extension.ts"]
+sources: ["docs/commands.md", "packages/core/src/commands.ts", "packages/core/src/integration.ts", "packages/setup/src/integration.ts", "src/integration/commands.ts", "src/integration/extension.ts"]
 ---
 
 Type `/` in a session to search every available command. Device names complete with Tab. Device and recording commands run immediately, without involving the model; they also work from the shell, such as `kinex run "/ping arm"`.
@@ -13,14 +13,14 @@ Type `/` in a session to search every available command. Device names complete w
 | Command | Does |
 | --- | --- |
 | `/devices` | List devices and whether each is set to load |
-| `/load <device\|all>` | Connect a device and wait until it's ready |
+| `/load <device\|all>` | Connect a device, starting any nodes it declares, and wait until it's ready |
 | `/unload <device\|all>` | Disconnect a device and release its resources |
 | `/ping <device\|all>` | Check a device's live status, without starting anything |
-| `/stop [device]` | Stop the agent and the robot's motion, without asking for approval |
-| `/register <type>` | Ask the agent to set up a new device of this type or template |
-| `/unregister <device>` | After confirmation, remove a device's profile, driver and files (needs the TUI; from the shell it's cancelled) |
+| `/stop [device]` | Cancel the agent's response, stop the robot's motion and cancel scripts that commanded it, without asking for approval |
+| `/register <type-or-template>` | Ask the agent to set up a new device of this type or template; it stays unloaded |
+| `/unregister <device>` | After confirmation, unload a device and delete its profile, node and local files (needs the TUI; from the shell it's cancelled) |
 
-To restart a device, run `/unload` and then `/load`.
+To restart a device, for example after editing its profile or node, run `/unload` and then `/load`.
 
 ## Recording
 
@@ -28,7 +28,7 @@ To restart a device, run `/unload` and then `/load`.
 | --- | --- |
 | `/record start <device=Hz ...> [instruction]` | Start recording these devices at these rates |
 | `/record snap <device ...> [note]` | Save one snapshot and mark the moment |
-| `/record status` | Show the current and recent recordings |
+| `/record status` | Show the active recording and summaries of recent ones |
 | `/record stop [success\|failure\|partial] [note]` | Stop and save, with an optional outcome |
 
 Add `--verbose` right after the action (for example `/record status --verbose`) to include empty fields. See [Recording](/docs/recording/).

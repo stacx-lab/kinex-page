@@ -1,25 +1,21 @@
 {
-  "_comment": "30-second adapted replay from backup/new5. Character-by-character text, indeterminate tool activity, original camera frames. Calls are condensed; source evidence is in public/media/demo/provenance.json.",
+  "_comment": "30-second adapted replay from backup/new5. Character-by-character text, indeterminate tool activity, original camera frames. Calls are condensed; source evidence is in public/media/demo/provenance.json. The shell phase shows rosbridge's launch and setup commands with condensed output.",
   "shell": [
     {
       "kind": "sh",
-      "text": "roboenv launch abc/hang-mug-on-mug-rack --detach"
+      "text": "rosbridge launch abc/hang-mug-on-mug-rack --domain-id 42 --detach"
     },
     {
       "kind": "out",
-      "text": "Ready: abc/hang-mug-on-mug-rack\nEndpoint: http://127.0.0.1:8123"
+      "text": "Run: 5c2e81a94f07\nTask: abc/hang-mug-on-mug-rack\nState: ready\nROS domain: 42"
     },
     {
       "kind": "sh",
-      "text": "mkdir -p workspace"
-    },
-    {
-      "kind": "sh",
-      "text": "(cd workspace && roboenv setup abc/abc-yam)"
+      "text": "rosbridge setup abc/abc-yam --directory workspace --domain-id 42"
     },
     {
       "kind": "out",
-      "text": "Robot: abc/abc-yam\nDestination: workspace/.kinex"
+      "text": "\"robot\": \"abc/abc-yam\"\n\"workspace\": \"~/lab/workspace/.kinex\""
     },
     {
       "kind": "sh",
