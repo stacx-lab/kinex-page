@@ -1,13 +1,17 @@
 ---
-import { docGroups } from '../config';
+import { archive, site } from '../config';
 import { url } from '../lib/url';
-import { docHref, type Doc } from '../lib/content';
+import { docHref, trees, type Doc, type DocCollection } from '../lib/content';
 
-interface Props { docs: Doc[]; current?: string }
-const { docs, current } = Astro.props;
-const groups = docGroups
+interface Props { docs: Doc[]; current?: string; collection?: DocCollection }
+const { docs, current, collection = 'docs' } = Astro.props;
+const { base, groups: names } = trees[collection];
+const groups = names
   .map((g) => ({ name: g, items: docs.filter((d) => d.data.group === g) }))
   .filter((g) => g.items.length);
+const other = collection === 'docs'
+  ? { href: url(archive.base), text: `↺ v${archive.version} docs` }
+  : { href: url('/docs/'), text: `→ Latest docs (v${site.version})` };
 ---
 <nav class="side" aria-label="docs">
   {groups.map((g) => (
@@ -21,7 +25,8 @@ const groups = docGroups
     </div>
   ))}
   <div class="grp extra">
-    <a href={url('/docs/all/')} class:list={{ on: current === '__all' }}>≡ Single-page view</a>
+    <a href={url(`${base}all/`)} class:list={{ on: current === '__all' }}>≡ Single-page view</a>
+    <a href={other.href}>{other.text}</a>
   </div>
 </nav>
 <style>

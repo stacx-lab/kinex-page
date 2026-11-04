@@ -4,8 +4,10 @@ import Sidebar from '../components/Sidebar.astro';
 import Toc from '../components/Toc.astro';
 import '../styles/prose.css';
 import type { MarkdownHeading } from 'astro';
-import type { Doc as DocEntry } from '../lib/content';
+import type { Doc as DocEntry, DocCollection } from '../lib/content';
 import { docHref } from '../lib/content';
+import { archive, site } from '../config';
+import { url } from '../lib/url';
 
 interface Props {
   docs: DocEntry[];
@@ -15,19 +17,28 @@ interface Props {
   headings?: MarkdownHeading[];
   current?: string;
   searchable?: boolean;
+  collection?: DocCollection;
+  /** For archived pages: the current page that replaces this one. */
+  latest?: string;
 }
-const { docs, entry, title, description, headings = [], current, searchable = true } = Astro.props;
+const { docs, entry, title, description, headings = [], current, searchable = true, collection = 'docs', latest = url('/docs/') } = Astro.props;
+const archived = collection !== 'docs';
 const i = entry ? docs.findIndex((d) => d.id === entry.id) : -1;
 const prev = i > 0 ? docs[i - 1] : undefined;
 const next = i >= 0 && i < docs.length - 1 ? docs[i + 1] : undefined;
 ---
-<Base title={title} description={description} bodyClass="docs-page">
+<Base title={title} description={description} bodyClass="docs-page" noindex={archived}>
   <div class="docs wrap">
     <button class="menu" type="button" data-menu aria-expanded="false" aria-controls="docs-side">☰ Menu <span class="dim">/ {entry?.data.group ?? 'Docs'}</span></button>
-    <aside class="col-side" id="docs-side"><Sidebar docs={docs} current={entry?.id ?? current} /></aside>
+    <aside class="col-side" id="docs-side"><Sidebar docs={docs} current={entry?.id ?? current} collection={collection} /></aside>
 
     <main id="main" class="col-main">
-      <article data-pagefind-body={searchable ? '' : undefined}>
+      {archived && (
+        <p class="vbanner" role="note" data-pagefind-ignore>
+          You're viewing the v{archive.version} docs. <a href={latest}>See the latest (v{site.version}) →</a>
+        </p>
+      )}
+      <article data-pagefind-body={searchable && !archived ? '' : undefined}>
         <header class="dh">
           {entry && <p class="kicker" data-pagefind-ignore>{entry.data.group}</p>}
           <h1>{title}</h1>
@@ -100,6 +111,12 @@ const next = i >= 0 && i < docs.length - 1 ? docs[i + 1] : undefined;
   .col-toc .sticky { position: sticky; top: calc(var(--topbar) + 28px); padding-top: 28px; }
   .menu { display: none; }
 
+  .vbanner {
+    margin: 0 0 20px; padding: 10px 14px; font-size: 13.5px;
+    border: 1px solid var(--rule); border-left: 2px solid var(--accent); border-radius: var(--radius);
+    background: var(--accent-bg); color: var(--ink-2);
+  }
+  .vbanner a { font-weight: 600; }
   .dh { margin-bottom: 24px; }
   .dh h1 { font-size: 26px; line-height: 1.2; letter-spacing: -0.02em; font-weight: 600; margin: 4px 0 8px; }
   .lede { color: var(--ink-2); margin: 0; font-size: 15px; }

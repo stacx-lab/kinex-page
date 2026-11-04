@@ -16,3 +16,12 @@ export const nav = [
 
 // Sidebar group order. Every doc's `group` frontmatter must be one of these.
 export const docGroups = ['Get started', 'Concepts', 'Guides', 'Reference'] as const;
+
+// Frozen documentation for an earlier release, served under `base`. Never edit
+// its pages; map a removed or renamed v1.0 slug to its current slug in `moved`.
+export const archive = {
+  version: '1.0.0',
+  base: '/docs/v1.0/',
+  groups: ['Get started', 'Concepts', 'Guides', 'Reference'] as const,
+  moved: {} as Record<string, string>,
+};
