@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { ARCHIVE, archivedSlugs, currentSlugs, removedSlugs, route } from './doc-trees.mjs';
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
-const origin = new URL(process.env.SITE_URL || 'https://kinex-agent.com').origin;
+const origin = new URL(process.env.SITE_URL || 'https://kinex-agent.org').origin;
 const htmlFiles = [];
 const cssFiles = [];
 (function walk(dir) {
@@ -103,6 +103,6 @@ for (const slug of removedSlugs) {
 }
 if (!target('/404.html')) fail('Missing root 404 page');
 if (!target('/pagefind/pagefind.js')) fail('Missing Kinex search bundle');
-if (readFileSync(join(dist, 'CNAME'), 'utf8').trim() !== 'kinex-agent.com') fail('Incorrect custom domain');
+if (readFileSync(join(dist, 'CNAME'), 'utf8').trim() !== 'kinex-agent.org') fail('Incorrect custom domain');
 console.log(`${htmlFiles.length} pages checked, ${bad} broken link(s) or routing error(s)`);
 process.exit(bad ? 1 : 0);

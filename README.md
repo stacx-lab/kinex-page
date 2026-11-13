@@ -1,6 +1,6 @@
 # Kinex website
 
-Standalone Kinex landing page and documentation for **https://kinex-agent.com**,
+Standalone Kinex landing page and documentation for **https://kinex-agent.org**,
 copied from the Kinex section of `stacx-lab.github.io`.
 
 ## Develop and check
@@ -70,7 +70,7 @@ The remote is `git@github.com:stacx-lab/kinex-page.git`. The included Actions
 workflow checks and deploys `dist/` on pushes to `main`, or on a manual run.
 
 1. Push this repository to GitHub. In **Settings → Pages**, select **GitHub
-   Actions** as the source and save **kinex-agent.com** as the custom domain.
+   Actions** as the source and save **kinex-agent.org** as the custom domain.
 2. At the domain's DNS provider, configure the following records (replace any
    conflicting parking records for these hosts):
 
@@ -90,11 +90,11 @@ workflow checks and deploys `dist/` on pushes to `main`, or on a manual run.
    JavaScript. A meta refresh and clickable link provide a fallback.
 
 GitHub Pages serves these legacy redirects as static HTML, not HTTP 301 responses.
-Only the `kinex-page` repository should have `kinex-agent.com` configured; the
+Only the `kinex-page` repository should have `kinex-agent.org` configured; the
 lab repository keeps its existing domain. `public/CNAME` records the intended
 domain, but an Actions deployment still requires the custom domain to be saved
 in GitHub's Pages settings. The site builds at `/`, not `/kinex-page/`.
 
 See [GitHub's custom-domain documentation](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site)
 for DNS and custom-domain details. `SITE_URL` overrides the build's canonical
-origin for testing; production defaults to `https://kinex-agent.com`.
+origin for testing; production defaults to `https://kinex-agent.org`.

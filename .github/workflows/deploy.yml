@@ -30,7 +30,7 @@ jobs:
       - run: npm ci
       - run: npm run check
         env:
-          SITE_URL: https://kinex-agent.com
+          SITE_URL: https://kinex-agent.org
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: https://kinex-agent.com/
+      url: https://kinex-agent.org/
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4

@@ -8,7 +8,7 @@ import { ARCHIVE, removedSlugs, route } from './scripts/doc-trees.mjs';
 const stubs = new Set(removedSlugs.map((slug) => route('/docs/', slug)));
 
 export default defineConfig({
-  site: process.env.SITE_URL || 'https://kinex-agent.com',
+  site: process.env.SITE_URL || 'https://kinex-agent.org',
   base: '/',
   trailingSlash: 'always',
   build: { inlineStylesheets: 'always' },
