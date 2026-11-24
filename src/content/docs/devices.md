@@ -1,69 +1,69 @@
 ---
 title: Devices
-description: What a device is — its type, profile and nodes — and how you load, stop and call devices.
+description: What a device is — its type, profile and nodes — and how devices are loaded, stopped and called.
 group: Concepts
 order: 20
-sources: ["docs/devices.md", "docs/communication.md", "packages/core/README.md", "packages/core/assets/builtin/device/templates/joint/DEVICE.md", "packages/core/assets/builtin/device/templates/world/DEVICE.md", "packages/core/src/commands.ts", "packages/core/src/tool/device/device.txt"]
+sources: ["docs/devices.md", "docs/communication.md", "packages/core/README.md", "packages/core/assets/builtin/device/templates/*/DEVICE.md", "packages/core/src/commands.ts", "packages/core/src/tool/device/device.txt"]
 ---
 
-Kinex treats a robot as a collection of devices: arms, grippers, cameras, a mobile base, a VLA and a world clock. Every device is made of three things:
+Kinex treats a robot as a set of independent devices: arms, grippers, cameras, a mobile base, a vision model, a clock. The agent composes whichever ones a task needs. If a camera is missing, it reads the ones that remain and plans around that.
 
-- a **type**, which says what kind of device it is;
-- a **profile**, which describes its operations and physical facts;
+Every device has three parts:
+
+- a **type**, which says what kind of thing it is;
+- a **profile**, which declares its operations and physical facts;
 - **nodes**, the ROS 2 programs that serve those operations.
 
 ## Types
 
 | Type | For | Typical operations |
 | --- | --- | --- |
-| `joint` | Arms, lifts, torsos and dexterous hands described by a URDF | `joint_state`, `joint_target`, `stop` |
+| `joint` | Arms, lifts, torsos and dexterous hands described by a URDF | `joint_state`, `joint_target` or `pose_target`, `stop` |
 | `gripper` | Grippers with one actuated grip joint | `joint_state`, `target`, `grasped`, `stop` |
-| `suction` | Suction cups | `target`, `grasped`, `stop` |
-| `locomotion` | Wheeled bases, quadrupeds, humanoid walking controllers | `velocity`, `odometry`, `mode`, `stop` |
-| `rgb`, `rgbd` | Color and RGB-D cameras | `image` (+ `depth`) |
+| `suction` | Suction tools | `target`, `grasped`, `stop` |
+| `locomotion` | Wheeled bases, quadrupeds and humanoid walking controllers | `velocity`, `odometry`, `mode`, `stop` |
+| `rgb`, `rgbd` | Color, stereo and RGB-D cameras | `image`, `depth` |
 | `imu`, `force_torque` | Inertial and force/torque sensors | `imu`, `wrench` |
-| `model` | Detection, segmentation, policies and other inference services | Named after what they compute, e.g. `detect`, `infer` |
-| `world` | The workspace clock and scene. Every workspace has one. | `time`, `wait`, `stop` (+ `reset` in simulators) |
-| `other` | Anything else | Whatever the profile declares |
+| `model` | Detectors, segmenters, policies and other inference services | Named for what they compute, such as `detect` or `infer` |
+| `world` | The workspace clock. Every workspace has one. | `time`, `wait`, `stop` |
+| `other` | Anything else | Whatever its profile declares |
 
-The operation names are recommendations from each type's setup guide. A device's own profile decides what it actually offers. Two types work differently from the rest:
+These operation names are recommendations. A device's own profile decides what it offers, and the agent always reads the profile instead of assuming from the type.
 
 ### The world device
 
-The `world` device owns time. Its `time` topic is the clock that device data, frames and recordings follow, and its `wait` service waits for a duration of world time:
+The `world` device owns time. Its `time` topic is the clock that device data, frames and recordings follow, and its `wait` service lets a program wait for a duration of world time:
 
-- **On real hardware**, the world is system time.
-- **In a realtime simulation**, the simulator's clock runs continuously.
-- **In a stepped simulation**, the world advances only while a `wait` asks for more time. Reading cameras or joint states never advances it.
+- **On real hardware**, world time is system time.
+- **In a realtime simulation**, the simulator's clock runs on its own.
+- **In a stepped simulation**, the world advances only while a `wait` asks for more time. Reading a camera or a joint state never advances it.
 
-A program that waits through `world.wait` therefore runs unchanged on hardware and in either kind of simulation.
+A program that paces itself with `world.wait` therefore runs unchanged in all three. A simulator's world may also publish a `budget`: how much world time the episode has used and is allowed.
 
 ### Model devices
 
-Detection, segmentation and policy models are `model` devices. Their operations are services that take and return JSON, with images passed as file paths. Loading the device puts the model on its CPU or GPU; unloading releases it. See [vision models](/docs/vision/) and [VLAs](/docs/vla/).
+A detector, a segmenter or a policy is a `model` device. Its operations are services that take and return JSON, with images passed as file paths. Loading the device places the model on its CPU or GPU; unloading releases it. The model only computes. What to do with its output is the program's decision. See [Using models](/docs/models/).
 
 ## Profiles
 
 Each device lives in its own folder:
 
 ```text
-.kinex/
-├── workspace.yaml              # the robot as a whole: identity and keep-out zones
-└── devices/<name>/
-    ├── profile.yaml            # this device's profile
-    ├── node.py                 # its node, when Kinex runs one
-    └── arm.urdf                # geometry, for joint and gripper devices
+.kinex/devices/arm/
+├── profile.yaml     # the device's profile
+├── node.py          # its node, when Kinex runs one
+└── arm.urdf         # geometry, for joint and gripper devices
 ```
 
-A profile describes the device, its operations and its physical facts. Here is a shortened arm profile:
+A shortened arm profile:
 
 ```yaml
 name: arm
 type: joint
-description: 6-DoF arm on the table, driven by its ros2_control controller.
-loaded: false                  # whether Kinex should load it on start
+description: 6-DoF arm on the table, driven by its ros2_control trajectory controller.
+loaded: true                   # connect when Kinex starts
 runtime:
-  nodes: [{entry: node.py, factory: create}, {entry: links.py, factory: create}]
+  nodes: [{entry: node.py, factory: create}]
 operations:
   joint_state:
     description: Measured joint positions and velocities in URDF units.
@@ -83,54 +83,58 @@ operations:
     direction: input
     endpoint: /kinex/arm/stop
     type: std_srvs/srv/Trigger
-model: {format: urdf, path: arm.urdf, base_link: base_link, tip_link: flange}
+model: {format: urdf, path: arm.urdf, base_link: base_link, tip_links: [flange]}
 frames:
   base: {parent: world:base, translation_m: [0.4, 0, 0], rotation_xyzw: [0, 0, 0, 1]}
 ```
 
-- **`operations`** are the device's ROS 2 topics and services. Their descriptions are what the agent reads, so they say what each operation does, in which units and frames.
-- **Physical facts** such as `model` and `frames` sit at the top level. A value nobody knows yet is written as `???` and stays unknown until setup or calibration measures it.
-- **`runtime`** lists the nodes Kinex starts for the device (see [Nodes](#nodes)).
+- **`operations`** are the device's ROS 2 endpoints. Each is a `topic`, a `service` or an `action`, with a standard ROS type. The descriptions are what the agent reads, so they state units, frames and effects.
+- **Physical facts** such as `model` and `frames` sit at the top level. A value nobody knows yet is written `???` and stays unknown until setup or calibration measures it.
+- **`runtime.nodes`** lists the nodes Kinex starts for the device.
 
-Onboarding writes profiles for you, and during a session Kinex edits them with its `profile_write` tool rather than by hand. The full field list is in the [device contracts](https://github.com/stacx-lab/kinex/blob/ade9a7e971b31e0a9b3f284df02e019ecf8db67b/docs/devices.md).
+You rarely write a profile by hand. Onboarding writes them, and the agent edits them with its `profile_write` tool, which validates every change. The full field list is in the [device contracts](https://github.com/stacx-lab/kinex/blob/e49da2e9a1158e8774f007e75adf9e41705f4e9b/docs/devices.md).
 
 ### Frames
 
-Every spatial device has a `base` frame and declares where it is mounted. Each frame names its parent as `device:frame`, for example `parent: world:base` for an arm on the table, or `parent: arm:flange` for a wrist camera. Joint and gripper devices add one frame per URDF link, which Kinex updates from measured joint states. Together these form one frame tree, which `helpers.relative_pose` uses to express a pose in any frame. Mounts you don't know yet stay `???` until [calibration](/docs/onboarding/#calibration) measures them; Kinex never assumes an unknown mount is the identity.
+Every spatial device has a `base` frame and says where it is mounted: `parent: world:base` for an arm on a table, `parent: arm:flange` for a wrist camera. Joint and gripper devices add one frame per URDF link, which Kinex keeps up to date from the measured joint state.
+
+Together these form one frame tree. A program asks for any relationship in it, at any recent moment:
+
+```python
+# the camera's optical frame in the arm's base, at the moment the image was taken
+camera_in_arm = await lib.frames.lookup_transform("arm:base", image.header.frame_id, image)
+```
+
+A mount nobody has measured stays `???` and is left out of the tree. Kinex never assumes it is the identity, so a lookup across it fails loudly until [calibration](/docs/onboarding/#calibration) fills it in.
 
 ## Nodes
 
-A node is the small ROS 2 program that implements a device's operations. Kinex ships a reference node for each type. Most adapt a robot's existing ROS driver, for example a ros2_control trajectory controller or a camera driver, to the device's operations. Joint and gripper devices also run a `links.py` node that publishes their URDF links as frames.
+A node is the small ROS 2 program that serves a device's operations. Kinex ships a reference node for every type except `other`. Most adapt a driver you already have, such as a ros2_control trajectory controller or a camera driver, to the device's operations.
 
-A device doesn't have to run a node of its own. With `nodes: []`, its operations point directly at topics and services an existing ROS stack already serves. Kinex starts only the nodes a device declares and never stops anyone else's. Simulator workspaces exported by [rosbridge](/docs/simulators/) work this way.
-
-Nodes use the workspace's [Kinex Python](/docs/control-graph/#python-environment). A device whose SDK needs a separate Python environment can name its own interpreter in `runtime`.
+A device doesn't need a node of its own. With `nodes: []`, its operations point directly at endpoints another ROS stack already serves. Simulator workspaces from [kinex-sim](/docs/simulators/) work this way. Kinex starts only the nodes a device declares, and never stops anyone else's.
 
 ## Using devices
 
 ### Loading and stopping
 
-Devices are saved unloaded until you connect them:
-
 ```text
-/devices            # list devices and whether each should be loaded
+/devices            # list devices and whether each is set to load
 /load arm           # start its nodes and wait until it is ready
-/ping arm           # check status without starting anything
-/stop arm           # stop its motion right away (or /stop for every device)
+/ping arm           # check live status without starting anything
+/stop arm           # stop its motion now (or /stop for every device)
 /unload arm         # stop its nodes and release its resources
-/unregister arm     # after confirmation, unload and delete its profile, node and files
 ```
 
-After you edit a profile or a node, run `/unload` and then `/load` to apply the change. Kinex never restarts a failed device on its own; check it with `/ping`, then reload it.
+Devices set to `loaded` connect when Kinex starts. After editing a profile or a node, run `/unload` and `/load` to apply the change. Kinex never restarts a failed device by itself: check it with `/ping`, then reload it.
 
-`/stop` doesn't need approval and also cancels the agent's response. Each actuator documents what stopping does for it: an arm holds its posture, a base halts, and a gripper keeps holding what it has.
+`/stop` needs no approval. It cancels the agent's response and any running program that commanded the device. Each actuator documents what stopping means for it: an arm holds its posture, a base halts, a gripper keeps holding what it has.
 
 ### Calling devices
 
 The agent calls one operation directly with the `device` tool, or several at once with `devices`:
 
 ```json
-{"deviceID": "arm", "action": "joint_state"}
+{"deviceID": "camera_wrist", "action": "image"}
 ```
 
-Camera reads come back with the image attached. Anything longer than a single call, such as a feedback loop, a motion plan or perception followed by motion, goes in a program the agent runs with `exec`. See [Control graph](/docs/control-graph/).
+A camera read comes back with the image attached. Anything longer than one call, such as perception followed by motion or a feedback loop, goes into a program. See [Control graph](/docs/control-graph/).

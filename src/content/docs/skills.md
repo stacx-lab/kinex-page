@@ -1,43 +1,45 @@
 ---
 title: Skills
-description: What skills are, how the agent uses them, and the skills bundled with Kinex.
+description: What skills are, how the agent uses them, and the skills that ship with Kinex.
 group: Concepts
 order: 40
-sources: ["docs/architecture.md", "docs/tools-and-skills.md", "packages/core/src/tool/skill.txt", "packages/core/src/skill/index.ts", "packages/core/assets/builtin/skill/setup-device/SKILL.md", "packages/setup/assets/builtin/skill/*/SKILL.md", "packages/setup/README.md"]
+sources: ["docs/architecture.md", "docs/tools-and-skills.md", "packages/core/src/skill/index.ts", "packages/core/src/tool/skill.txt", "packages/core/assets/builtin/skill/setup-device/SKILL.md", "packages/setup/assets/builtin/skill/*/SKILL.md", "packages/setup/README.md"]
 ---
 
-A skill is a written procedure that tells the agent how to approach a kind of task: what to do, in what order, what to check and what to watch out for. It is a `SKILL.md` file, optionally with reference notes or scripts beside it.
+A skill is a written procedure: what to do, in what order, what to check and what to watch out for. It is a `SKILL.md` file, optionally with notes or scripts beside it. Devices say what the robot can do and programs do it; a skill carries the know-how in between.
 
 ## How the agent uses skills
 
-The agent always sees each skill's name and description. When a description matches the task, it loads the full instructions with the `skill` tool, then does the work itself through the [control graph](/docs/control-graph/). Skills don't run anything, and loading one grants no extra permissions.
+The agent always sees every skill's name and one-line description. When a description matches the task, it loads the full instructions with the `skill` tool and then does the work itself, through [programs](/docs/control-graph/) and device calls. A skill runs nothing by being loaded, and it grants no extra permissions.
 
-You don't usually load skills yourself. [`/onboarding`](/docs/onboarding/) and `/calibrate` pick the ones the current task needs, and the agent loads others when a task matches their description.
+You don't usually load skills yourself. [`/onboarding` and `/calibrate`](/docs/onboarding/) pick the ones the current task needs, and the agent loads others as tasks match them.
 
 ## Bundled skills
-
-### Setup and calibration
 
 Kinex's own setup is written as skills:
 
 | Skill | Purpose |
 | --- | --- |
-| `setup-device` | Add a device or repair it: pick a device guide, set up its nodes, write its profile and verify it. Covers every device type, including robots that already run ROS 2. |
+| `setup-device` | Add or repair a device: choose a device guide, set up its node, write its profile and verify it. Covers every device type, including robots that already run ROS 2. |
 | `calibrate-camera-intrinsics` | A color camera's projection and distortion |
 | `calibrate-camera-extrinsics` | Where a camera is mounted, from robot poses and board observations |
-| `calibrate-tcp-offset` | The tool tip's position, by touching a point from several poses |
-| `calibrate-fixed-arm-mount` | Where an arm's base sits on its parent, such as a table, mobile base or torso |
-| `calibrate-dual-arm` | How two arms are positioned relative to each other |
+| `calibrate-tcp-offset` | Where the tool tip is, by touching one point from several poses |
+| `calibrate-fixed-arm-mount` | Where an arm's base sits on its parent: a table, a mobile base or a torso |
+| `calibrate-dual-arm` | How two arms sit relative to each other |
 | `calibrate-joint-range` | Joint limits, from models or measurements |
 | `calibrate-gripper-grip` | A gripper's grip joint and its open and closed positions |
-| `calibrate-sensor-bias` | IMU or force/torque sensor bias, from static readings |
+| `calibrate-sensor-bias` | IMU or force/torque bias, from static readings |
 | `calibrate-world-geometry` | Measured workspace bounds and surfaces |
-| `verify-base-interface`, `verify-base-motion`, `verify-base-posture` | Checks for a mobile base's control interface, its motion and stop behavior, and its height and attitude |
+| `verify-base-interface`, `verify-base-motion`, `verify-base-posture` | A mobile base's control interface, its motion and stop behavior, and its height and attitude |
+
+The calibration skills measure and solve inside programs, with the functions in `kinex.lib.calibration`.
 
 ### Device guides
 
-`setup-device` follows a **device guide**: one for each device type, such as `joint` or `rgbd`, and one for each bundled model, such as `sam3`. You can add your own guide for one device at `.kinex/device/<name>/DEVICE.md`, or for a type at `.kinex/device/templates/<type>/DEVICE.md`; Kinex uses a device's own guide before its type's.
+`setup-device` follows a **device guide**: one per device type, such as `joint` or `rgbd`, and one per bundled model (`sam3`, `grounding-dino`, `fastwam`). A guide explains how to write that device's profile, and all but the `other` guide ship a reference node.
+
+To add your own, write `.kinex/device/<name>/DEVICE.md` for one device or `.kinex/device/templates/<type>/DEVICE.md` for a type. A device's own guide is used before its type's.
 
 ## Your own skills
 
-You can teach the agent your own procedures the same way: a `SKILL.md` in `.kinex/skills/`, picked up at the agent's next step. A project skill with the same name as a bundled one replaces it. See [Writing skills](/docs/writing-skills/).
+A `SKILL.md` under `.kinex/skills/` teaches the agent your procedures the same way, and is picked up at its next step. A project skill with a bundled skill's name replaces it. See [Writing skills](/docs/writing-skills/).

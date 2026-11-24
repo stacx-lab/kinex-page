@@ -1,12 +1,14 @@
 // Single edit point for site-wide facts. Bump `version` on each release.
 export const site = {
   name: 'kinex',
-  version: '1.1.0',
-  sourceRef: 'ade9a7e971b31e0a9b3f284df02e019ecf8db67b',
-  tagline: 'A general harness that connects coding agents to any physical robot',
+  version: '1.1.1',
+  sourceRef: 'e49da2e9a1158e8774f007e75adf9e41705f4e9b',
+  tagline: 'A robotics harness for coding agents',
   description:
-    'Kinex is a general harness for arbitrary robots with coding agents, built on the Pi coding agent. Devices run as ROS 2 nodes; agents control them with Python programs and skills, on robots, simulators and models.',
+    'Kinex is an open-source robotics harness for coding agents. Robots, simulators and models become ROS 2 devices; the agent controls them by writing and running Python programs, guided by skills.',
   repo: 'https://github.com/stacx-lab/kinex',
+  sim: 'https://github.com/stacx-lab/kinex-sim',
+  plugins: 'https://github.com/stacx-lab/kinex-plugins',
   install: 'curl -fsSL https://raw.githubusercontent.com/stacx-lab/kinex/main/install.sh | bash',
 };
 
@@ -23,5 +25,5 @@ export const archive = {
   version: '1.0.0',
   base: '/docs/v1.0/',
   groups: ['Get started', 'Concepts', 'Guides', 'Reference'] as const,
-  moved: { architecture: 'design-principles', runtime: 'control-graph', 'tools-and-skills': 'control-graph', ros2: 'real-robots', 'custom-tools': 'control-graph' } as Record<string, string>,
+  moved: { runtime: 'control-graph', 'tools-and-skills': 'control-graph', ros2: 'real-robots', 'custom-tools': 'programs', vision: 'models', vla: 'models' } as Record<string, string>,
 };

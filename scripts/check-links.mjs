@@ -2,7 +2,7 @@
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ARCHIVE, archivedSlugs, currentSlugs, removedSlugs, route } from './doc-trees.mjs';
+import { ARCHIVE, archivedSlugs, currentSlugs, removedSlugs, renamedSlugs, route } from './doc-trees.mjs';
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
 const origin = new URL(process.env.SITE_URL || 'https://kinex-agent.org').origin;
@@ -93,8 +93,8 @@ for (const r of archived) {
 }
 if (sitemap.includes(`${origin}${ARCHIVE}`)) fail('Sitemap lists archived docs');
 
-// Removed pages forward to their archived copy or successor.
-for (const slug of removedSlugs) {
+// Removed and renamed pages forward to their archived copy or successor.
+for (const slug of [...removedSlugs, ...renamedSlugs]) {
   const r = route('/docs/', slug);
   const html = page(r);
   if (!html) continue;
