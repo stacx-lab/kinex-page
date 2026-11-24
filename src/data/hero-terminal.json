@@ -1,9 +1,17 @@
 {
-  "_comment": "30-second adapted replay from backup/new5. Character-by-character text, indeterminate tool activity, original camera frames. Calls are condensed; source evidence is in public/media/demo/provenance.json. The shell phase shows rosbridge's launch and setup commands with condensed output.",
+  "_comment": "30-second adapted replay of a recorded session. Camera frames and measured values are from that session (public/media/demo/provenance.json); the calls are condensed and written as the v1.1.1 tools (exec, lib, device), and the shell phase shows kinex-sim's setup and launch with condensed output.",
   "shell": [
     {
       "kind": "sh",
-      "text": "rosbridge launch abc/hang-mug-on-mug-rack --domain-id 42 --detach"
+      "text": "kinex-sim setup abc/hang-mug-on-mug-rack --directory workspace --domain-id 42"
+    },
+    {
+      "kind": "out",
+      "text": "\"robot\": \"abc/abc-yam\"\n\"workspace\": \"~/lab/workspace\"\n\"loaded\": true"
+    },
+    {
+      "kind": "sh",
+      "text": "kinex-sim launch abc/hang-mug-on-mug-rack --execution-mode stepped --domain-id 42 --detach"
     },
     {
       "kind": "out",
@@ -11,19 +19,7 @@
     },
     {
       "kind": "sh",
-      "text": "rosbridge setup abc/abc-yam --directory workspace --domain-id 42"
-    },
-    {
-      "kind": "out",
-      "text": "\"robot\": \"abc/abc-yam\"\n\"workspace\": \"~/lab/workspace/.kinex\""
-    },
-    {
-      "kind": "sh",
-      "text": "cd workspace"
-    },
-    {
-      "kind": "sh",
-      "text": "kinex"
+      "text": "cd workspace && kinex"
     }
   ],
   "steps": [
@@ -37,15 +33,15 @@
       "id": "camera",
       "kind": "tool",
       "title": "device",
-      "detail": "read camera_top",
-      "result": "RGB-D \u00b7 640 \u00d7 480",
+      "detail": "camera_top · image",
+      "result": "RGB-D · 640 × 480",
       "duration": 650
     },
     {
       "id": "image",
       "kind": "image",
-      "title": "read",
-      "detail": "camera_top",
+      "title": "device",
+      "detail": "camera_top · attached",
       "views": [
         {
           "image": "/media/demo/session-001_123770de10e8c0d4.png",
@@ -69,69 +65,52 @@
       "duration": 1300
     },
     {
-      "id": "joints",
+      "id": "lib",
       "kind": "tool",
-      "title": "device",
-      "detail": "read right_arm",
-      "result": "joints: [0.202, 0.390, 1.118, -0.873, 0.133, 0.426]\nfaults: []",
-      "duration": 850
+      "title": "lib",
+      "detail": "images.camera_geometry",
+      "result": "await geometry.unproject(pixels) → optical rays, Z = 1",
+      "duration": 800
     },
     {
       "id": "code",
       "kind": "code",
-      "title": "write",
-      "detail": "mug_position.py",
-      "code": "# Backproject the selected mug pixel from RGB-D.\nu, v = 449, 296\nz = depth[v * width + u] * scale\nxyz = [r * z for r in ray(intr, u, v)]\ndistance = math.sqrt(sum(v * v for v in xyz))",
-      "duration": 1800
+      "title": "exec",
+      "detail": "locate the mint mug",
+      "code": "image, depth = await lib.images.camera_frame(\"camera_top\")\nray = (await geometry.unproject([[449, 296]]))[0]\nto_arm = await lib.frames.lookup_transform(\n    \"right_arm:base\", image.header.frame_id, image)\nfinish({\"mug\": to_arm.apply(ray * z)}, file=[image])",
+      "duration": 1900
     },
     {
       "id": "distance",
       "kind": "tool",
-      "title": "bash",
-      "detail": "python mug_position.py",
-      "result": "camera xyz \u2248 [0.278, 0.121, 0.929] m\ndistance \u2248 0.977 m",
-      "duration": 650
-    },
-    {
-      "id": "target",
-      "kind": "tool",
-      "title": "relative_pose",
-      "detail": "world \u2192 right_arm",
-      "result": "world \u2192 right_arm \u00b7 approach flange\n[0.1775, 0.0280, 0.2747, 0.7071, 0.7071, 0, 0]",
-      "duration": 850
-    },
-    {
-      "id": "servo",
-      "kind": "tool",
-      "title": "servo",
-      "detail": "right_arm \u00b7 approach + descend",
-      "result": "TCP [0.430, -0.282, 0.805] m \u00b7 error 0.44 mm",
-      "duration": 1050,
-      "busy": 300
+      "title": "exec",
+      "detail": "returned",
+      "result": "in camera_top ≈ [0.278, 0.121, 0.929] m\n0.977 m from the lens",
+      "duration": 700
     },
     {
       "id": "grasp",
       "kind": "tool",
-      "title": "device",
-      "detail": "write right_gripper",
-      "result": "close \u00b7 aperture 0.0688 m",
-      "duration": 600,
-      "busy": 200
+      "title": "exec",
+      "detail": "approach, descend and grasp",
+      "result": "TCP [0.430, -0.282, 0.805] m · error 0.44 mm\ngripper closed · aperture 0.0688 m",
+      "duration": 1300,
+      "busy": 350
     },
     {
       "id": "carry",
       "kind": "tool",
-      "title": "servo",
-      "detail": "right_arm \u00b7 lift + carry",
-      "result": "TCP [0.567, -0.130, 0.984] m \u00b7 grip maintained",
+      "title": "exec",
+      "detail": "lift and carry to the rack",
+      "result": "TCP [0.567, -0.130, 0.984] m · grip maintained",
       "duration": 1000,
       "busy": 300
     },
     {
       "id": "wrist",
       "kind": "image",
-      "title": "read",
-      "detail": "camera_top + camera_right",
+      "title": "exec",
+      "detail": "attached · camera_top + camera_right",
       "views": [
         {
           "image": "/media/demo/session-003_c1e0864a6d142372.png",
@@ -151,31 +130,31 @@
     {
       "id": "other-view",
       "kind": "agent",
-      "text": "The mug blocks the right wrist. I\u2019ll use the left wrist to align the handle.",
+      "text": "The mug blocks the right wrist camera. I’ll use the left wrist to align the handle.",
       "duration": 1000
     },
     {
       "id": "handle-pose",
       "kind": "tool",
-      "title": "relative_pose",
-      "detail": "camera_left \u2192 world",
+      "title": "exec",
+      "detail": "locate the handle from camera_left",
       "result": "handle hole [0.5029, -0.0188, 0.9543] m\nplane RMS 0.50 mm",
       "duration": 950
     },
     {
-      "id": "align-servo",
+      "id": "align",
       "kind": "tool",
-      "title": "servo",
-      "detail": "right_arm \u00b7 align + insert",
-      "result": "speedFraction 0.25 \u00b7 check contact from both views",
+      "title": "exec",
+      "detail": "align and insert, fraction=0.25",
+      "result": "paused to check contact from both views",
       "duration": 1100,
       "busy": 350
     },
     {
       "id": "insert-view",
       "kind": "image",
-      "title": "read",
-      "detail": "camera_left + camera_top",
+      "title": "exec",
+      "detail": "attached · camera_left + camera_top",
       "views": [
         {
           "image": "/media/demo/session-011_bc5d553219135b05.png",
@@ -196,33 +175,25 @@
       "id": "release",
       "kind": "tool",
       "title": "device",
-      "detail": "write right_gripper",
-      "result": "open \u00b7 release the mug",
+      "detail": "right_gripper · target",
+      "result": "open · mug released",
       "duration": 650,
       "busy": 250
     },
     {
       "id": "withdraw",
       "kind": "tool",
-      "title": "servo",
-      "detail": "right_arm \u00b7 withdraw",
-      "result": "TCP [0.500, -0.150, 1.030] m \u00b7 gripper clear",
+      "title": "exec",
+      "detail": "withdraw the right arm",
+      "result": "TCP [0.500, -0.150, 1.030] m · gripper clear",
       "duration": 1000,
       "busy": 300
     },
     {
-      "id": "verify-cameras",
-      "kind": "tool",
-      "title": "devices",
-      "detail": "read camera_left + camera_top",
-      "result": "Settled \u00b7 new wrist + overhead observations",
-      "duration": 650
-    },
-    {
       "id": "final-view",
       "kind": "image",
-      "title": "read",
-      "detail": "camera_left + camera_top",
+      "title": "devices",
+      "detail": "camera_left + camera_top · image",
       "views": [
         {
           "image": "/media/demo/session-015_ad6150d8c8e61f86.png",

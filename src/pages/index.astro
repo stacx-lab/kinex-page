@@ -3,132 +3,243 @@ import Base from '../layouts/Base.astro';
 import Terminal from '../components/Terminal.astro';
 import ArchDiagram from '../components/ArchDiagram.astro';
 import DeviceDiagram from '../components/DeviceDiagram.astro';
+import ProgramLoop from '../components/ProgramLoop.astro';
+import Environments from '../components/Environments.astro';
 import CopyCmd from '../components/CopyCmd.astro';
 import VideoGallery from '../components/VideoGallery.astro';
 import Contributors from '../components/Contributors.astro';
 import Wordmark from '../components/Wordmark.astro';
 import BenchmarkResults from '../components/BenchmarkResults.astro';
 import PhysicalRSI from '../components/PhysicalRSI.astro';
+import SectionHead from '../components/SectionHead.astro';
 import { site } from '../config';
 import { url } from '../lib/url';
+
+const facts = [
+  { value: 'ROS 2', label: 'Devices are ROS 2 nodes, on Jazzy or Humble' },
+  { value: '8 simulators', label: '892 tasks through kinex-sim, on the device contract real robots use' },
+  { value: '4 hosts', label: 'Kinex itself, or Pi, Claude Code and Codex' },
+  { value: 'Apache-2.0', label: 'Open source, from the runtime to the calibration skills' },
+];
 const paths = [
-  { k: 'Already using ROS 2?', cmd: 'setup-device', prefix: 'Skill:', body: 'Kinex devices are ROS 2 nodes, so onboarding reuses your existing drivers and topics. Supports ROS 2 Jazzy and Humble.', href: '/docs/real-robots/#robots-that-already-run-ros-2' },
-  { k: 'Play with simulators', cmd: 'rosbridge setup', body: 'rosbridge runs LIBERO, RoboTwin, RoboCasa, RoboDojo, ABC and BEHAVIOR with the same device interfaces as real hardware.', href: '/docs/simulators/' },
-  { k: 'Work with real robots', cmd: '/onboarding', body: 'Describe the hardware and the task. Kinex connects the devices and calibrates what the task needs.', href: '/docs/real-robots/' },
+  { k: 'Try it in simulation', cmd: 'kinex-sim launch libero', body: 'Launch one of 892 tasks, open its exported workspace and hand the agent the instruction.', href: '/docs/simulators/', c: 'graph' },
+  { k: 'Connect a real robot', cmd: '/onboarding', body: 'Describe the hardware and the task. Kinex writes the device nodes and calibrates what the task needs.', href: '/docs/real-robots/', c: 'devices' },
+  { k: 'Stay in your own agent', cmd: '“Start Kinex”', body: 'Install the plugin for Pi, Claude Code or Codex and keep your tools, sessions and approvals.', href: '/docs/plugins/#using-kinex-from-other-harnesses', c: 'skills', bare: true },
+];
+// Circuit traces from kinex/assets/banner-*.svg, in its 1280×400 frame: [path, open end, filled end].
+const traces: [string, [number, number], [number, number]][] = [
+  ['M-10 108H118Q132 108 132 122V190Q132 204 146 204H252', [132, 108], [252, 204]],
+  ['M84 324H190Q204 324 204 310V266Q204 252 218 252H312', [312, 252], [84, 324]],
+  ['M36 204V238Q36 252 50 252H108', [36, 204], [108, 252]],
+  ['M1290 156H1178Q1164 156 1164 142V98Q1164 84 1150 84H1020', [1164, 156], [1020, 84]],
+  ['M1236 60V94Q1236 108 1222 108H1188', [1188, 108], [1236, 60]],
+  ['M1116 410V362Q1116 348 1102 348H996', [1116, 348], [996, 348]],
 ];
 ---
 <Base>
   <main id="main">
-    <section class="hero grid-bg">
+    <section class="hero">
+      {(['left', 'right'] as const).map((side) => (
+        <div class={`traces ${side}`} aria-hidden="true">
+          <svg viewBox={side === 'left' ? '0 80 330 270' : '950 40 330 380'}>
+            {traces.filter(([, open]) => (open[0] < 640) === (side === 'left')).map(([d, open, filled], i) => (
+              <g>
+                <path d={d} class="trace" />
+                <path d={d} class="pulse" style={`animation-delay: ${i * -2.1}s`} />
+                <circle cx={open[0]} cy={open[1]} r="5" class="node open" />
+                <circle cx={filled[0]} cy={filled[1]} r="5" class="node" />
+              </g>
+            ))}
+          </svg>
+        </div>
+      ))}
       <div class="wrap hero-in">
         <div class="pitch">
-          <h1>One Agent for Any Robot.</h1>
+          <a class="release" href={url('/docs/#new-in-111')}>
+            <span class="tag">v{site.version}</span>
+            <span>Programs, a function library and kinex-sim</span>
+            <span aria-hidden="true">→</span>
+          </a>
+          <h1>One agent for <span class="hl">any robot</span>.</h1>
           <p class="sub">
-            Tell <a class="self-link" href={url('/')} aria-label="Kinex home"><Wordmark /></a> about your robot and the job to do. It adapts to your robot, carries out tasks autonomously,
-            and learns from every run, both in <b>simulation</b> or on <b>real hardware</b>, including <b>ROS 2 devices</b>.
+            Tell <a class="self-link" href={url('/')} aria-label="Kinex home"><Wordmark /></a> about your robot and the job to do.
+            The agent reads the robot’s devices, writes its own control programs and checks every result against fresh sensor data,
+            in <b>simulation</b> and on <b>real hardware</b>.
           </p>
-          <p class="platform-note">Install on macOS and Ubuntu.</p>
           <CopyCmd cmd={site.install} />
-          <p class="install-note">Prefer to use Pi, Codex, or Claude Code? <a href="https://github.com/stacx-lab/kinex-plugins">Explore kinex-plugins →</a></p>
+          <p class="platform-note">macOS and Linux · Node.js 22.19 or newer</p>
           <div class="cta">
             <a class="btn primary" href={url('/docs/')}>Get started →</a>
             <a class="btn" href="#gallery">Watch the demos ↓</a>
+            <a class="btn ghost" href={site.repo} rel="noopener">GitHub ↗</a>
           </div>
-          <p class="pi-note">Kinex is built on <a href="https://pi.dev">Pi</a>.</p>
         </div>
         <Terminal />
       </div>
+      <dl class="wrap facts">
+        {facts.map((fact) => (
+          <div><dt>{fact.value}</dt><dd>{fact.label}</dd></div>
+        ))}
+      </dl>
     </section>
 
     <VideoGallery />
 
-    <section class="wrap sec architecture" id="architecture" aria-labelledby="architecture-heading">
-      <p class="kicker">02 · Architecture</p>
-      <div class="architecture-part">
-        <h2 id="architecture-heading">Three layers of abstraction for acting with arbitrary robots.</h2>
-        <p class="section-copy">An agent needs a way to turn a goal into physical action. Kinex separates that work into three layers: <strong>skills</strong> describe how to approach a task, the <strong>control graph</strong> is the Python the agent writes to carry out perception, computation, and control, and <strong>devices</strong> expose the robot’s capabilities through typed ROS 2 interfaces. Results flow back to the agent so it can decide what to do next.</p>
-        <ArchDiagram />
-      </div>
-      <div class="architecture-part">
-        <h2>A system of devices rather than a monolithic robot</h2>
-        <p class="section-copy">Kinex exposes a robot as independent devices: a mobile base, torso, arms, grippers, and cameras. The agent writes and runs control code to coordinate these devices for each task. This makes workflows more flexible, lets each task compose the robot it needs, and helps them generalize across robot configurations. If a camera is missing, for example, the agent can inspect the remaining devices, use another viewpoint where available, and revise its workflow to fit the capabilities it actually has.</p>
+    <section class="wrap sec" id="architecture" aria-labelledby="architecture-heading">
+      <SectionHead n="02" label="Architecture" title="Three layers between a coding agent and the physical world." id="architecture-heading">
+        <strong>Devices</strong> expose what the robot can do as typed ROS 2 interfaces. The <strong>control graph</strong> is the Python the agent writes to perceive, compute and control. <strong>Skills</strong> carry the know-how for tasks such as calibration. Results and images flow back, and the agent decides what to do next.
+      </SectionHead>
+      <ArchDiagram />
+    </section>
+
+    <section class="wrap sec" id="control-graph" aria-labelledby="loop-heading">
+      <SectionHead n="03" label="Control graph" title="The agent writes the controller." id="loop-heading">
+        Kinex has no fixed menu of motion commands. For each step of a task the agent writes a short program, runs it with <code>exec</code> and reads back what happened. A program that works is saved and runs again with <a href={url('/docs/programs/')}><code>/exec</code></a>, no model needed.
+      </SectionHead>
+      <ProgramLoop />
+      <div class="devices-part">
+        <h3>A system of devices, not a monolithic robot.</h3>
+        <p class="section-copy">A robot is a set of independent devices: a base, a torso, arms, grippers, cameras. Each program composes the ones the task needs, which is why the same agent works across embodiments. If a camera is missing, it reads the ones that remain and plans around that.</p>
         <DeviceDiagram />
       </div>
     </section>
 
-    <section class="wrap sec benchmark" id="benchmark-results" aria-labelledby="benchmark-heading">
-      <h2 class="kicker" id="benchmark-heading">03 · Benchmark results</h2>
+    <section class="wrap sec" id="environments" aria-labelledby="environments-heading">
+      <SectionHead n="04" label="Environments" title="The same contract in simulation and on hardware." id="environments-heading">
+        A simulated arm and a real one are the same kind of device, with the same operations and the same clock interface. What the agent works out in simulation carries over.
+      </SectionHead>
+      <Environments />
+    </section>
+
+    <section class="wrap sec" id="benchmark-results" aria-labelledby="benchmark-heading">
+      <SectionHead n="05" label="Benchmark" title="Zero-shot manipulation, measured." id="benchmark-heading" />
       <BenchmarkResults />
     </section>
 
-    <section class="wrap sec physical-rsi" id="physical-rsi" aria-labelledby="rsi-heading">
-      <h2 class="kicker" id="rsi-heading">04 · Physical recursive self-improvement</h2>
+    <section class="wrap sec" id="physical-rsi" aria-labelledby="rsi-heading">
+      <SectionHead n="06" label="Physical recursive self-improvement" title="Robots that learn from their own experience." id="rsi-heading" />
       <PhysicalRSI />
     </section>
 
-    <section class="wrap sec">
-      <p class="kicker">05 · Where to start</p>
-      <div class="cards">
-        {paths.map((p) => (
-          <a class="card" href={url(p.href)}>
-            <span class="ck">{p.k}</span>
-            <code class="cc"><span>{p.prefix ?? '$'}</span> {p.cmd}</code>
-            <span class="cb">{p.body}</span>
-            <span class="go">→</span>
-          </a>
-        ))}
+    <Contributors />
+
+    <section class="wrap start" aria-labelledby="start-heading">
+      <div class="start-in">
+        <p class="label">Get started</p>
+        <h2 id="start-heading">Give your robot a task.</h2>
+        <div class="cards">
+          {paths.map((p) => (
+            <a class={`card c-${p.c}`} href={url(p.href)}>
+              <span class="ck">{p.k}</span>
+              <code class="cc">{!p.bare && <span>$</span>} {p.cmd}</code>
+              <span class="cb">{p.body}</span>
+              <span class="go" aria-hidden="true">→</span>
+            </a>
+          ))}
+        </div>
       </div>
     </section>
-    <Contributors />
   </main>
 </Base>
 
 <style>
-  .hero { border-bottom: 1px solid var(--rule); }
-  .hero-in {
-    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px;
-    max-width: 1180px;
-    align-items: center; padding-block: 64px 72px;
+  /* ── hero ─────────────────────────────────────────────── */
+  .hero {
+    position: relative; isolation: isolate; overflow: hidden; border-bottom: 1px solid var(--rule);
+    background:
+      radial-gradient(ellipse 60% 70% at 76% 42%, var(--glow), transparent 70%),
+      radial-gradient(var(--grid) 1px, transparent 1px) 0 0 / 22px 22px,
+      var(--wash);
   }
-  @media (max-width: 960px) { .hero-in { grid-template-columns: minmax(0, 1fr); padding-block: 48px 56px; gap: 40px; } }
-  .pitch { min-width: 0; container-type: inline-size; }
-  h1 { font-size: clamp(20px, 7.2cqi, 42px); white-space: nowrap; line-height: 1.08; letter-spacing: -0.035em; font-weight: 600; margin: 0 0 18px; }
-  .sub { color: var(--ink-2); margin: 0 0 26px; }
-  .sub b { color: var(--ink); font-weight: 600; }
-  .platform-note { margin: 0 0 8px; font-size: var(--fs-1); color: var(--ink-2); }
-  .install-note, .pi-note { margin: 10px 0 0; font-size: var(--fs-1); color: var(--ink-2); }
-  .pi-note { margin-top: 18px; }
-  .install-note a, .pi-note a { text-decoration: underline; text-underline-offset: 3px; }
-  .install-note a:hover, .pi-note a:hover { color: var(--accent); }
-  .cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  /* Traces run in from the page edges and stop short of the content column. */
+  .traces {
+    position: absolute; z-index: -1; top: 96px; overflow: hidden; opacity: 0.7;
+    width: max(0px, calc((100vw - var(--wrap)) / 2 + 4px));
+  }
+  .traces svg { display: block; height: 400px; width: auto; max-width: none; }
+  .traces.left { left: 0; mask-image: linear-gradient(90deg, #000 55%, transparent); }
+  .traces.right { right: 0; top: 60px; mask-image: linear-gradient(270deg, #000 55%, transparent); }
+  .traces.right svg { margin-left: auto; height: 560px; float: right; }
+  .trace { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-opacity: 0.45; stroke-linecap: round; }
+  .pulse { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 26 520; animation: pulse 7.8s linear infinite; }
+  .node { fill: var(--accent); stroke: var(--accent); stroke-width: 1.5; }
+  .node.open { fill: var(--bg); }
+  @keyframes pulse { from { stroke-dashoffset: 546; } to { stroke-dashoffset: 0; } }
 
-  .sec { padding-top: 72px; }
-  main > .sec { border-top: 1px solid var(--rule); margin-top: 72px; }
-  .sec h2 { font-size: var(--fs-4); letter-spacing: -0.02em; font-weight: 600; margin: 6px 0 24px; }
-  .benchmark h2.kicker, .physical-rsi h2.kicker { font-size: var(--fs-0); letter-spacing: var(--tracking); font-weight: 400; margin: 0; }
-  .architecture h2 { margin-bottom: 16px; }
-  @media (min-width: 960px) { #architecture-heading { white-space: nowrap; } }
-  .section-copy { color: var(--ink-2); margin: 0 0 32px; line-height: 1.75; }
-  .section-copy strong { color: var(--ink); font-weight: 600; }
-  .architecture-part + .architecture-part { margin-top: 56px; }
-
-  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; border: 1px solid var(--rule); border-radius: 6px; }
-  @media (max-width: 860px) { .cards { grid-template-columns: 1fr; } }
-  .card { position: relative; display: grid; gap: 10px; align-content: start; padding: 18px 20px 22px; background: var(--panel); }
-  .card + .card { border-left: 1px solid var(--rule); }
-  @media (max-width: 860px) { .card + .card { border-left: 0; border-top: 1px solid var(--rule); } }
-  .card:first-child { border-radius: 6px 0 0 6px; } .card:last-child { border-radius: 0 6px 6px 0; }
-  @media (max-width: 860px) { .card:first-child { border-radius: 6px 6px 0 0; } .card:last-child { border-radius: 0 0 6px 6px; } }
-  .ck { padding-right: 24px; font-family: var(--font-head); font-weight: 700; font-size: 17px; }
-  .cc { font-size: 12px; color: var(--accent-ink); }
-  .cc span { color: var(--ink-3); }
-  .cb { font-size: 14.5px; color: var(--ink-2); line-height: 1.6; }
-  .go { position: absolute; top: 22px; right: 22px; color: var(--ink-3); transition: transform .15s; }
-  .card:hover { background: var(--bg); }
-  .card:hover .go { color: var(--accent); transform: translateX(4px); }
-
+  .hero-in {
+    display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 40px;
+    align-items: center; padding-block: 72px 56px;
+  }
+  .pitch { min-width: 0; }
+  .release {
+    display: inline-flex; align-items: center; gap: 10px; max-width: 100%; margin-bottom: 22px; padding: 4px 12px 4px 4px;
+    font-size: 13px; color: var(--ink-2); background: var(--panel); border: 1px solid var(--rule-2); border-radius: 999px;
+    transition: border-color .15s;
+  }
+  .release > :nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .release:hover { border-color: var(--accent); color: var(--ink); }
+  .tag { font-family: var(--font-mono); font-size: 11.5px; color: var(--accent-ink); background: var(--accent-bg); padding: 2px 8px; border-radius: 999px; }
+  h1 {
+    margin: 0 0 20px; font-size: clamp(38px, 5.6vw, 64px); line-height: 1.02; letter-spacing: -0.04em; font-weight: 600;
+    text-wrap: balance;
+  }
+  .hl { color: var(--accent-ink); background: linear-gradient(transparent 68%, color-mix(in srgb, var(--accent) 24%, transparent) 68%, color-mix(in srgb, var(--accent) 24%, transparent) 92%, transparent 92%); }
+  .sub { color: var(--ink-2); margin: 0 0 26px; font-size: 18px; line-height: 1.6; max-width: 34em; text-wrap: pretty; }
+  .sub b { color: var(--ink); font-weight: 700; }
+  .platform-note { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-3); }
+  .cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  .cta .btn { height: 38px; padding: 0 16px; font-size: 14.5px; }
+  .btn.ghost { background: none; border-color: transparent; color: var(--ink-2); }
+  .btn.ghost:hover { color: var(--ink); border-color: var(--rule-2); }
   .self-link { border-bottom: 1px solid transparent; transition: border-color 0.15s; }
   .self-link:hover { border-bottom-color: var(--accent); }
-  .inline-link { color: var(--accent-ink); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); text-underline-offset: 3px; }
-  .inline-link:hover { text-decoration-color: var(--accent); }
+
+  .facts {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-block: 0; padding-block: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .facts > div { padding: 20px 20px 24px; border-left: 1px solid var(--rule); }
+  .facts > div:first-child { padding-left: 0; border-left: 0; }
+  dt { font-family: var(--font-head); font-weight: 600; font-size: 19px; letter-spacing: -0.01em; }
+  dd { margin: 4px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+  @media (max-width: 960px) {
+    .hero-in { grid-template-columns: minmax(0, 1fr); padding-block: 48px 40px; gap: 36px; }
+    .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .facts > div { padding: 16px 16px 18px; }
+    .facts > div:nth-child(odd) { padding-left: 0; border-left: 0; }
+    .facts > div:nth-child(n + 3) { border-top: 1px solid var(--rule); }
+  }
+
+  /* ── sections ─────────────────────────────────────────── */
+  .sec { padding-top: 88px; scroll-margin-top: 20px; }
+  .sec :global(.sh-lead code) { font-size: 0.86em; padding: 0.1em 0.38em; border-radius: 4px; background: var(--bg-2); border: 1px solid var(--rule); }
+  .devices-part { margin-top: 72px; }
+  .devices-part h3 { margin: 0 0 12px; font-size: 24px; letter-spacing: -0.02em; font-weight: 600; }
+  .section-copy { color: var(--ink-2); margin: 0 0 28px; line-height: 1.7; max-width: 780px; }
+
+  /* ── closing call ─────────────────────────────────────── */
+  .start { padding-top: 88px; }
+  .start-in {
+    padding: 44px 40px 40px; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--rule)); border-radius: 18px;
+    background: radial-gradient(ellipse 50% 80% at 100% 0%, var(--glow), transparent 70%), var(--wash);
+  }
+  .start h2 { margin: 10px 0 28px; font-size: clamp(28px, 3.6vw, 40px); line-height: 1.1; letter-spacing: -0.03em; font-weight: 600; }
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .card {
+    position: relative; display: grid; gap: 10px; align-content: start; padding: 20px 20px 22px;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 12px;
+    transition: transform .15s, border-color .15s, box-shadow .15s;
+  }
+  .c-skills { --c: var(--skills); } .c-graph { --c: var(--graph); } .c-devices { --c: var(--devices); }
+  .ck { padding-right: 24px; font-family: var(--font-head); font-weight: 600; font-size: 18px; }
+  .cc { justify-self: start; font-size: 12px; color: var(--c); padding: 3px 9px; border-radius: 6px; background: color-mix(in srgb, var(--c) 9%, transparent); }
+  .cc span { opacity: 0.6; }
+  .cb { font-size: 14.5px; color: var(--ink-2); line-height: 1.6; }
+  .go { position: absolute; top: 20px; right: 20px; color: var(--ink-3); transition: transform .15s, color .15s; }
+  .card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--c) 60%, var(--rule)); box-shadow: var(--shadow); }
+  .card:hover .go { color: var(--c); transform: translateX(4px); }
+  @media (max-width: 860px) {
+    .cards { grid-template-columns: 1fr; }
+    .start-in { padding: 28px 20px 24px; }
+  }
 </style>

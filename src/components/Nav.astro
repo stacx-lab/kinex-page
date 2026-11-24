@@ -10,6 +10,8 @@ import Wordmark from './Wordmark.astro';
     </a>
     <div class="links">
       <a class="link" href={url('/docs/')}>Docs</a>
+      <a class="link opt" href={url('/docs/simulators/')}>Simulators</a>
+      <a class="link opt" href={url('/#gallery')}>Gallery</a>
       <a class="link github" href={site.repo} rel="noopener">GitHub</a>
     </div>
     <div class="tools">
@@ -65,5 +67,6 @@ import Wordmark from './Wordmark.astro';
     .links { gap: 12px; }
     .search-trigger { gap: 0; padding: 0 6px; }
   }
+  @media (max-width: 760px) { .opt { display: none; } }
   @media (max-width: 380px) { .github { display: none; } }
 </style>

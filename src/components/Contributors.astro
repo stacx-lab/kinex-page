@@ -1,5 +1,6 @@
 ---
 import { url } from '../lib/url';
+import SectionHead from './SectionHead.astro';
 
 // Public portrait sources are recorded in public/img/contributors/sources.json.
 const groups = [
@@ -25,7 +26,7 @@ const groups = [
 ---
 
 <section class="wrap contributors" id="contributors" aria-labelledby="contributors-heading">
-  <h2 class="kicker" id="contributors-heading">06 · Current contributors</h2>
+  <SectionHead n="07" label="Contributors" title="The people behind Kinex." id="contributors-heading" />
   <div class="groups">
     {groups.map((group) => (
       <div class="group">
@@ -50,8 +51,7 @@ const groups = [
 </section>
 
 <style>
-  .contributors { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--rule); }
-  .kicker { margin: 0 0 22px; }
+  .contributors { padding-top: 88px; }
   .groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; }
   h3 { margin: 0 0 16px; font-size: 15px; font-weight: 600; }
   ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }

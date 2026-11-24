@@ -1,0 +1,28 @@
+---
+// Numbered section header for the landing page: index, label, title and an optional lead.
+interface Props { n: string; label: string; title: string; id?: string }
+const { n, label, title, id } = Astro.props;
+---
+<header class="sh">
+  <p class="sh-k"><span class="sh-n">{n}</span><span class="label">{label}</span></p>
+  <h2 id={id}>{title}</h2>
+  {Astro.slots.has('default') && <p class="sh-lead"><slot /></p>}
+</header>
+<style>
+  .sh { max-width: 780px; margin-bottom: 36px; }
+  .sh-k { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
+  .sh-n {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--accent-ink);
+    padding: 2px 7px; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 999px;
+    background: var(--accent-bg);
+  }
+  .sh-k::after { content: ''; flex: 0 0 48px; height: 1px; background: var(--rule-2); }
+  h2 {
+    margin: 0; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.14; letter-spacing: -0.028em; font-weight: 600;
+    text-wrap: balance;
+  }
+  .sh-lead { margin: 16px 0 0; color: var(--ink-2); font-size: 17px; line-height: 1.65; text-wrap: pretty; }
+  .sh-lead :global(strong) { color: var(--ink); font-weight: 600; }
+  .sh-lead :global(a) { text-decoration: underline; text-underline-offset: 3px; }
+  .sh-lead :global(a:hover) { color: var(--accent); }
+</style>
