@@ -1,20 +1,20 @@
 ---
 title: CLI reference
-description: Every `kinex` shell command and option in v1.1.0.
+description: Every `kinex` shell command and option.
 group: Reference
 order: 10
 label: CLI
 sources: ["src/cli.ts", "src/arguments.ts", "src/packages.ts", "docs/commands.md", "docs/distribution.md", "install.sh", "src/upgrade.ts", "README.md"]
 ---
 
-Kinex's command line follows the syntax of the Pi coding agent it's built on, with robotics options added and a few Pi options left out. For commands you type inside a session, see [Slash commands](/docs/slash-commands/).
+Kinex's command line follows the Pi coding agent it is built on, with robotics options added and a few Pi options left out. For commands you type inside a session, see [Slash commands](/docs/slash-commands/).
 
 ## Commands
 
 | Command | Does |
 | --- | --- |
 | `kinex ["prompt" ...]` | Start an interactive session, optionally sending prompts right away |
-| `kinex run "prompt"` | Run one task without the TUI and print the final reply (same as `-p`) |
+| `kinex run "prompt"` | Run one task without the TUI and print the final reply (same as `-p`). A slash command works as the prompt and needs no model. |
 | `kinex --export <session.jsonl> [output.html]` | Turn a saved session into HTML, without starting a model |
 | `kinex install <source> [-l]` | Install a Pi package (`npm:`, `git:` or a local path); `-l`/`--local` for this project only |
 | `kinex remove <source> [-l\|--local]` | Remove a package (alias: `uninstall`) |
@@ -82,22 +82,14 @@ Kinex's command line follows the syntax of the Pi coding agent it's built on, wi
 
 ```sh
 kinex "Inspect the workspace"                           # start a session with a first prompt
-kinex run "/ping arm"                                   # run a slash command and exit
+kinex run "/ping all"                                   # run a slash command and exit
+kinex run '/exec .kinex/programs/home.py speed=0.3'     # run a saved program, no model
 kinex -p --mode json "Describe the scene" > events.jsonl
 kinex -c --model provider/model                         # continue, with a different model
 kinex -p --record "arm=10 camera=2" "Pick the red mug"  # scripted run, recorded
 kinex --export session.jsonl out.html
 kinex update --all
 ```
-
-## Changed in 1.0.0
-
-| Old | Use instead |
-| --- | --- |
-| `--seed "prompt"` | `kinex "prompt"` |
-| `--json` | `--mode json` |
-| `--effort` | `--thinking` |
-| `kinex upgrade` | `kinex update`, or `kinex update --all` |
 
 ## Install and update
 
@@ -115,9 +107,9 @@ The installer:
 - asks before adding `~/.local/bin` to your `PATH`;
 - refuses to overwrite a `kinex` it didn't install, or to hide another `kinex` already on your `PATH`.
 
-The installer doesn't install Pixi or uv. Install one yourself before Kinex first runs Python; see [Python environment](/docs/control-graph/#python-environment).
+The installer doesn't install Pixi. Install it yourself before Kinex first runs Python; see [Kinex Python](/docs/workspace/#kinex-python).
 
-`kinex update` updates installer and npm installs of Kinex, and never downgrades. A source checkout is updated with Git and rebuilt instead. Updates don't rewrite device nodes, tools or skills copied into a workspace.
+`kinex update` updates installer and npm installs of Kinex, and never downgrades. A source checkout is updated with Git and rebuilt instead. Updates don't rewrite device nodes, library modules or skills you have copied into a workspace.
 
 ### Build from source
 
@@ -137,4 +129,4 @@ python3 -m pip install -r packages/core/test/requirements.txt -r packages/setup/
 npm run check
 ```
 
-See [AGENTS.md](https://github.com/stacx-lab/kinex/blob/ade9a7e971b31e0a9b3f284df02e019ecf8db67b/AGENTS.md) for contribution guidelines.
+See [AGENTS.md](https://github.com/stacx-lab/kinex/blob/e49da2e9a1158e8774f007e75adf9e41705f4e9b/AGENTS.md) for contribution guidelines.

@@ -1,20 +1,20 @@
 ---
-title: Plugin systems
-description: Install and manage Pi plugins in Kinex, and use Kinex itself as a plugin in Pi, Claude Code or Codex.
+title: Plugins
+description: Add Pi packages to Kinex, or use Kinex itself as a plugin inside Pi, Claude Code or Codex.
 group: Guides
 order: 70
-label: Plugin systems
+label: Plugins
 sources: ["README.md", "src/cli.ts", "src/packages.ts", "src/integration/default-extensions.ts", "packages/setup/README.md", "docs/overview.md", "docs/distribution.md"]
 ---
 
-Plugins work in two directions with Kinex:
+Plugins work in two directions:
 
-- **Into Kinex.** Kinex is built on [Pi](https://pi.dev), so it can install and run plugins from Pi's ecosystem: extensions, skills, prompt templates and themes.
-- **Out of Kinex.** Kinex's robotics layer is itself packaged as plugins, so you can use your devices, tools and skills from Pi, Claude Code or Codex instead of the Kinex app.
+- **Into Kinex.** Kinex is built on [Pi](https://pi.dev), so it runs packages from Pi's ecosystem: extensions, skills, prompt templates and themes.
+- **Out of Kinex.** Kinex's robotics runtime is itself packaged as plugins, so you can use your devices, programs and skills from Pi, Claude Code or Codex instead of the Kinex app.
 
-## Installing Pi plugins
+## Installing Pi packages
 
-Pi plugins are distributed as packages, from npm, a Git repository or a local folder. Kinex manages them with the same commands as Pi. Browse what's available at [pi.dev/packages](https://pi.dev/packages).
+Pi packages come from npm, a Git repository or a local folder, and Kinex manages them with the same commands as Pi. Browse what's available at [pi.dev/packages](https://pi.dev/packages).
 
 Kinex already bundles two: [pi-web-search](https://www.npmjs.com/package/pi-web-search) for web search and [pi-btw](https://www.npmjs.com/package/pi-btw) for side conversations.
 
@@ -27,17 +27,17 @@ kinex update npm:pi-web-search          # update a single package
 kinex remove npm:pi-web-search          # remove it; the bundled version takes over again
 ```
 
-Packages install for your user by default; add `-l` to install for the current project only. **Restart Kinex** after installing, updating or removing a package so the change takes effect. See Pi's [package documentation](https://github.com/earendil-works/pi/blob/v1.2.0/packages/coding-agent/docs/packages.md) to write your own.
+Packages install for your user by default; add `-l` to install for the current project only. **Restart Kinex** after installing, updating or removing a package so the change takes effect. See Pi's [package documentation](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md) to write your own.
 
 ## Using Kinex from other harnesses
 
-The [kinex-plugins](https://github.com/stacx-lab/kinex-plugins) repository brings Kinex's devices, control graph, robotics skills, onboarding and calibration to **Pi, Claude Code and Codex**. Your harness keeps its own coding tools, conversations, credentials and approvals, and you don't need the standalone Kinex app. OpenCode is not supported.
+The [kinex-plugins](https://github.com/stacx-lab/kinex-plugins) repository brings Kinex's devices, programs, robotics skills, onboarding and calibration to **Pi, Claude Code and Codex**. Your harness keeps its own coding tools, conversations, credentials and approvals, and you don't need the standalone Kinex app.
 
-Plugin releases are versioned separately and bundle their own copy of Kinex, so updating standalone Kinex doesn't update a plugin.
+Plugins are released separately and bundle their own copy of Kinex, so updating standalone Kinex doesn't update a plugin, and a plugin can trail the app by a release. Ask *“Show Kinex status”* to see which Kinex version your plugin runs.
 
 ### Installing a plugin
 
-You need Linux or macOS with Node.js 22.22.2 or newer, your host installed, and Pixi or uv for [Kinex Python](/docs/control-graph/#python-environment). Build the plugins from a local checkout and install them into your host:
+You need Linux or macOS with Node.js 22.22.2 or newer, your host installed, and Pixi for [Kinex Python](/docs/workspace/#kinex-python). Build the plugins from a local checkout and install them into your host:
 
 ```sh
 git clone https://github.com/stacx-lab/kinex-plugins.git
@@ -81,11 +81,12 @@ To bring Kinex to a host that isn't covered, build on `@kinex/core` directly. It
 ```ts
 import { createKinexRuntime } from "@kinex/core"
 import { coreContribution, composeContributions } from "@kinex/core/integration"
-import { createKinexSetup, setupContribution, setupSkillRoots, setupToolNames } from "@kinex/setup"
+import { createKinexSetup, setupContribution, setupLibRoots, setupSkillRoots, setupToolNames } from "@kinex/setup"
 
 const runtime = createKinexRuntime({
   directory: process.cwd(),
   builtinSkillRoots: setupSkillRoots,
+  builtinLibRoots: setupLibRoots,
   reservedToolNames: setupToolNames,
   host: { ask: async request => { /* authorize or throw */ } },
 })
@@ -101,4 +102,4 @@ try {
 }
 ```
 
-The [core README](https://github.com/stacx-lab/kinex/blob/ade9a7e971b31e0a9b3f284df02e019ecf8db67b/packages/core/README.md) and [setup README](https://github.com/stacx-lab/kinex/blob/ade9a7e971b31e0a9b3f284df02e019ecf8db67b/packages/setup/README.md#composition) cover the API.
+The [core README](https://github.com/stacx-lab/kinex/blob/e49da2e9a1158e8774f007e75adf9e41705f4e9b/packages/core/README.md) and [setup README](https://github.com/stacx-lab/kinex/blob/e49da2e9a1158e8774f007e75adf9e41705f4e9b/packages/setup/README.md#composition) cover the API.

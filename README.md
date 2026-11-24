@@ -36,9 +36,12 @@ Search is available in the production preview after building.
 | Generated Pagefind index | `/pagefind/` |
 
 Edit documentation here going forward. The pages describe the Kinex version in
-`src/config.ts` (`site.version` and `site.sourceRef`). Root-relative documentation links use
+`src/config.ts` (`site.version` and `site.sourceRef`), and the simulator guide
+follows [kinex-sim](https://github.com/stacx-lab/kinex-sim). Root-relative documentation links use
 `/docs/<slug>/`. Shared site facts are in `src/config.ts`; landing-page data is in
-`src/data/`.
+`src/data/`, except the simulator table in `src/components/Environments.astro`,
+which mirrors the table in the Kinex README. The wordmarks in `public/img/` use
+the outlined glyphs of `kinex/assets/banner-*.svg`, so they need no font.
 The original gallery production sources remain in `stacx-lab.github.io/gallery/`.
 This repository includes the published media and the two tutorial videos imported
 by the docs in `gallery/.masters/`. Those two masters use Git LFS, matching the
@@ -63,6 +66,11 @@ current page replaces a v1.0 page under a new slug, map the old slug to the new
 one in `archive.moved` in `src/config.ts`. Keep the media, the `gallery/.masters/`
 videos and the `prose.css` classes the archived pages use. `npm run check`
 verifies all three route sets.
+
+When a current page is renamed (as `design-principles` became `architecture`),
+leave a `src/pages/docs/<old-slug>.astro` that renders `Redirect`, and list the
+old slug in `renamedSlugs` in `scripts/doc-trees.mjs` so it stays out of the
+sitemap and the link check verifies the redirect.
 
 ## GitHub Pages and domain setup
 

@@ -9,4 +9,6 @@ const slugs = (dir) => readdirSync(new URL(`../src/content/${dir}/`, import.meta
 export const currentSlugs = slugs('docs');
 export const archivedSlugs = slugs('docs-v1.0');
 export const removedSlugs = archivedSlugs.filter((s) => s !== 'index' && !currentSlugs.includes(s));
+// Current-docs slugs that were renamed; each keeps a redirect stub in src/pages/docs/.
+export const renamedSlugs = ['design-principles'];
 export const route = (base, slug) => (slug === 'index' ? base : `${base}${slug}/`);

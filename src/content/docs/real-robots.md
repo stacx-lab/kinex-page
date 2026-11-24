@@ -1,107 +1,86 @@
 ---
-title: Onboarding real robots
-description: Onboard hardware for a concrete task with /onboarding and /register.
+title: Connect a real robot
+description: Describe your hardware and task with /onboarding; Kinex writes the device profiles and nodes, brings the hardware up and calibrates what the task needs.
 group: Get started
-order: 20
-label: Onboarding real robots
-sources: ["README.md", "packages/setup/README.md", "packages/setup/src/workflows/onboarding.txt", "packages/core/src/workflows/register.txt", "packages/core/assets/builtin/skill/setup-device/SKILL.md", "packages/core/src/context/robotics.txt", "docs/setup.md", "docs/overview.md"]
+order: 30
+label: Real robots
+sources: ["README.md", "docs/setup.md", "packages/setup/README.md", "packages/setup/src/workflows/onboarding.txt", "packages/core/src/workflows/register.txt", "packages/core/assets/builtin/skill/setup-device/SKILL.md"]
 ---
 
-Kinex drives real hardware through the same device interface it uses for simulators. You describe your robot and what you want it to do; the agent writes the device profiles and their ROS 2 nodes, brings the hardware up and checks it, calibrating only what the task needs. Supported embodiments include arms, lifts, mobile bases, quadrupeds, humanoids, grippers, suction, dexterous hands, cameras, IMUs and F/T sensors (see [Devices](/docs/devices/)).
+On a real robot, the agent sets up its own interface. You describe the hardware and what you want it to do. The agent writes a [device](/docs/devices/) profile and a small ROS 2 node for each part, brings them up, checks them and calibrates only what the task depends on.
 
-Assumes Kinex is installed (see [Install and run](/docs/#install-and-run)).
+Kinex has been used with fixed arms, dual arms, wheeled mobile manipulators and quadrupeds with arms. Install Kinex first (see [Install](/docs/#install)).
 
-## 1. Start Kinex in a fresh workspace
+<div class="caveat">
+<p class="caveat-title">You are responsible for safe operation</p>
+<p>Supervise the robot whenever it can move, keep a hardware emergency stop within reach and check motion limits before running a task. <code>/stop</code> does not replace an emergency stop.</p>
+</div>
+
+## 1. Open a workspace
 
 ```sh
-mkdir -p robot-workspace
-cd robot-workspace
+mkdir robot-workspace && cd robot-workspace
 kinex
 ```
 
-If you haven't yet, connect a model with `/login` and `/model`.
+Connect a model with `/login` and `/model` if you haven't yet.
 
-## 2. Onboard your robot
+## 2. Onboard the robot
 
-Describe the hardware, how it connects, and the task:
-
-```text
-/onboarding Set up my robot arm, gripper, and overhead camera to pick objects from the table.
-```
-
-Onboarding is an interview. The agent inspects what is already there, asks only for missing facts, and records a plan in `.kinex/setup/plan.json`. Early on it settles which ROS 2 distribution your robot uses (Jazzy or Humble) and sets up the `world` device that keeps time. It then prepares each device's profile and node, loads the devices and verifies them, covering only what this task needs. Unknowns stay `???`; nothing is invented.
-
-You can also register devices one at a time with `/register <type-or-template>`:
+Say what you have, how it connects and what it is for:
 
 ```text
-/register rgbd
-/register grounding-dino
+/onboarding Set up my robot arm, gripper and overhead camera to pick objects from the table.
 ```
 
-Each prepares the device's node and writes an unloaded profile, validating it without touching the hardware; run `/load` to bring it up. If your robot already runs ROS 2, onboarding reuses its drivers (see [Robots that already run ROS 2](#robots-that-already-run-ros-2)).
+Onboarding is a short interview. The agent looks at what is already there, asks only for the facts it is missing and then, device by device:
 
-## 3. Calibrate
+1. settles the robot's ROS 2 distribution (Jazzy or Humble) and sets up the `world` device that keeps time;
+2. writes each device's profile and node, loads it and verifies that it responds and stops;
+3. works out which calibration this task needs, and leaves the rest for later.
 
-Calibration pins down the physical facts the task depends on but the agent can't know yet, such as camera intrinsics, where a camera sits relative to the arm (extrinsics), the tool-tip (TCP) offset, or joint limits. It is handled by Kinex's calibration skills. Describe what you want calibrated, or leave it blank:
+Hand over whatever you have: SDKs, vendor ROS packages, manuals, URDFs. Facts nobody knows stay marked unknown instead of being guessed. See [Onboarding & calibration](/docs/onboarding/) for the details.
+
+## 3. Calibrate what the task needs
 
 ```text
 /calibrate camera-to-arm transform for picking
-/calibrate
 ```
 
-The agent works out what needs calibrating and which procedure to follow, guides you through collecting samples, and writes the result into the device profile. See [Onboarding & calibration](/docs/onboarding/#calibration) for the bundled procedures.
+The agent picks a procedure, guides you through collecting samples, checks the quality of the result and saves it to the device's profile. A bare `/calibrate` continues the current task's calibration.
 
-## 4. Bring it up and give a task
+## 4. Give it a task
 
 ```text
-/devices
-/load all
-/ping all
+/devices          # what is in the workspace
+/ping all         # is everything responding?
 ```
 
-Then give the task in plain language. Useful during work:
+Then describe the task in plain language. While it works:
 
 | Command | Effect |
 | --- | --- |
-| `/stop [device]` | Cancel the response, stop actuators in their stop scope |
-| `/unload <device>` | Release a device |
-| `/unregister <device>` | Confirm, then delete its profile, node and files |
+| `/stop [device]` | Cancel the agent's response and stop the actuators |
+| `/load <device>`, `/unload <device>` | Connect or release a device |
+| `/unregister <device>` | After confirmation, delete a device's profile, node and files |
 
 ## Robots that already run ROS 2
 
-Kinex devices are ROS 2 nodes, so a ROS 2 robot needs nothing extra. Start the robot's ROS stack, then onboard it as above. Onboarding:
+A Kinex device is a set of ROS 2 topics, services and actions, so a robot that already runs ROS 2 needs very little. Start its ROS stack, then onboard as above. Onboarding:
 
-- **reuses the robot's drivers.** A small Kinex node adapts a driver's topics to the device's operations, or the device points straight at topics your stack already serves. Unloading a device never stops your stack.
-- **matches your ROS setup.** It records the robot's ROS 2 distribution, Jazzy or Humble, in `.kinex/kinex.json`, and uses the same ROS domain as your robot.
-- **builds custom messages.** If your robot uses its own message or service types, it lists their packages in `python.interfaces` so Kinex Python can use them.
+- **reuses your drivers.** A device either points straight at endpoints your stack already serves, or runs a small node that adapts a driver to the device's operations. Unloading a device never stops your stack.
+- **matches your setup.** It records your distribution in `.kinex/kinex.json` and uses your robot's ROS domain.
+- **builds your message types.** Packages with custom messages are listed in `python.interfaces`, so the agent's programs can use them.
 
-Kinex keeps its own ROS 2 Python environment in `.kinex/python`, so your system ROS install is never changed. See [Python environment](/docs/control-graph/#python-environment).
+Kinex keeps its own ROS 2 environment in `.kinex/python`; your system ROS install is never changed. See [Kinex Python](/docs/workspace/#kinex-python).
 
-## Workspace layout
+## Adding a device later
 
-Start Kinex from your project folder. Directories are created as needed.
+Tell the agent what changed, or register one device directly:
 
 ```text
-robot-workspace/
-├── .kinex/                     # robotics workspace
-│   ├── workspace.yaml          # robot and workspace settings
-│   ├── kinex.json              # ROS distribution and permission rules
-│   ├── devices/<name>/         # one folder per device
-│   │   ├── profile.yaml        # operations, physical facts and calibration
-│   │   ├── node.py             # its ROS 2 node, when Kinex runs one
-│   │   └── arm.urdf            # geometry, for arms and grippers
-│   ├── lib/                    # shared Python helpers
-│   ├── tools/                  # callable agent tools
-│   ├── skills/                 # task procedures (SKILL.md)
-│   ├── setup/plan.json         # onboarding plan
-│   ├── calib/<run>/            # calibration evidence
-│   ├── python/                 # Kinex Python (ROS 2 environment)
-│   ├── recordings/             # recorded runs (rosbag2)
-│   └── agent/settings.json     # agent settings and packages
-└── .pi/                        # Pi agent resources
+/register rgbd
+/register sam3 on cuda:0
 ```
 
-- **`.kinex/`** holds robot configuration. **`devices/`** contains each device's profile, node and geometry. See [Devices](/docs/devices/#profiles).
-- **`.kinex/lib/`** holds shared Python helpers that nodes, tools and scripts can import. **`tools/`** and **`skills/`** add callable operations and task procedures. See [Writing skills](/docs/writing-skills/).
-- **`.pi/`** holds Pi agent resources; **`.kinex/agent/`** holds project agent settings and package choices. See [Plugin systems](/docs/plugins/).
-- **`.kinex/recordings/`** holds recorded runs. See [Recording](/docs/recording/). Conversation sessions are stored separately, outside the workspace; see [Working with the agent](/docs/agent/).
+`/register` takes a device type or a bundled template. It prepares the node and writes the profile without touching the hardware; `/load` brings it up.

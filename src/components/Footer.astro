@@ -1,19 +1,60 @@
 ---
 import { site } from '../config';
+import { url } from '../lib/url';
+import Wordmark from './Wordmark.astro';
+const columns = [
+  { title: 'Get started', links: [
+    { label: 'Install', href: url('/docs/#install') },
+    { label: 'Try it in simulation', href: url('/docs/simulators/') },
+    { label: 'Connect a real robot', href: url('/docs/real-robots/') },
+  ] },
+  { title: 'Learn', links: [
+    { label: 'Architecture', href: url('/docs/architecture/') },
+    { label: 'Control graph', href: url('/docs/control-graph/') },
+    { label: 'Python API', href: url('/docs/python-api/') },
+  ] },
+  { title: 'Projects', links: [
+    { label: 'kinex', href: site.repo },
+    { label: 'kinex-sim', href: site.sim },
+    { label: 'kinex-plugins', href: site.plugins },
+  ] },
+];
 ---
 
 <footer class="foot" data-pagefind-ignore>
+  <div class="wrap top">
+    <div class="brand">
+      <a href={url('/')} aria-label="Kinex home"><Wordmark size={22} /></a>
+      <p>{site.tagline}.</p>
+    </div>
+    {columns.map((column) => (
+      <nav aria-label={column.title}>
+        <p class="label">{column.title}</p>
+        <ul>{column.links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}</ul>
+      </nav>
+    ))}
+  </div>
   <div class="wrap row">
-    <span>Kinex is licensed under <a href={`${site.repo}/blob/main/LICENSE`}>Apache 2.0</a>.</span>
+    <span>Kinex is licensed under <a href={`${site.repo}/blob/main/LICENSE`}>Apache 2.0</a>. Built on <a href="https://pi.dev">Pi</a>.</span>
     <span class="dim">© {new Date().getFullYear()} Kinex contributors</span>
   </div>
 </footer>
 <style>
-  .foot { border-top: 1px solid var(--rule); margin-top: 72px; font-size: 12px; color: var(--ink-2); }
+  .foot { border-top: 1px solid var(--rule); margin-top: 96px; font-size: 13.5px; color: var(--ink-2); background: var(--bg-2); }
   :global(.docs-page) .foot { margin-top: 0; }
-  .row { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; padding-block: 18px; }
+  :global(.docs-page) .top { display: none; }
+  .top { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 32px; padding-block: 44px 32px; }
+  .brand p { margin: 12px 0 0; max-width: 26ch; line-height: 1.5; }
+  .label { margin: 0 0 12px; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+  .top a:hover, .row a:hover { color: var(--accent); }
+  .row { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; padding-block: 16px; border-top: 1px solid var(--rule); font-size: 12px; }
+  :global(.docs-page) .row { border-top: 0; }
   .row a { text-decoration: underline; text-underline-offset: 3px; }
-  .row a:hover { color: var(--accent); }
   .row > :last-child { margin-left: auto; }
+  @media (max-width: 760px) {
+    .top { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
+    .brand { grid-column: 1 / -1; }
+  }
   @media (max-width: 640px) { .row > :last-child { margin-left: 0; } }
 </style>

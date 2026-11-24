@@ -1,24 +1,24 @@
 ---
 title: Recording
-description: Record what your robot sees and does as rosbag2 bags, understand the files you get, and use recordings for self-improvement and training data.
+description: Record what your robot sees and does as rosbag2 bags, read the files you get, and put recordings to work.
 group: Guides
 order: 60
 sources: ["docs/agent-integration.md", "packages/core/src/commands.ts", "packages/core/src/record/spec.ts", "packages/core/src/tool/record.txt", "packages/core/src/record/layout.ts", "packages/core/src/record/schema.ts", "packages/core/assets/python/kinex/host/recording.py", "packages/core/src/config/config.ts", "src/cli.ts", "src/arguments.ts"]
 ---
 
-A recording captures what your devices observed and what they were commanded to do while Kinex works on a task, together with the conversation that drove it. Use it to review a run, compare trials, or collect demonstrations.
+A recording captures what your devices observed and what they were commanded to do while Kinex works on a task, together with the conversation that drove it. Use it to review a run, compare trials or collect data.
 
 ## How to record
 
-### From the TUI
+### In a session
 
-Load the devices and the world first (`/load all`); unloaded devices are refused. Then start a recording with the devices you want and the highest rate to record each one at (in Hz). Anything after the rates is the task instruction:
+Only loaded devices can be recorded. Start a recording with the devices you want and the highest rate, in Hz, to record each at. Anything after the rates is the task instruction:
 
 ```text
 /record start arm=10 gripper=10 wrist_cam=5 pick up the red mug and place it in the bin
 ```
 
-Then let Kinex work, or steer it yourself. The recording keeps running across turns and while the agent is thinking. Along the way:
+Then let the agent work, or steer it yourself. The recording keeps running across turns and while the agent thinks. Along the way:
 
 ```text
 /record snap wrist_cam grasp attempt     # mark a moment and save the camera's current image
@@ -62,7 +62,7 @@ Each recording is a folder under `.kinex/recordings/`:
 │   │   │   ├── operations.json   # the recorded operations and their ROS topics
 │   │   │   └── samples.jsonl     # one line per recorded message
 │   │   ├── frames/         # images saved by /record snap
-│   │   └── events.jsonl    # calls made to this device through Kinex tools
+│   │   └── events.jsonl    # calls the agent made with its device tools
 │   └── arm/
 │       └── ...
 └── passive/                # other devices the agent used but you didn't list
@@ -86,7 +86,7 @@ If you have ROS 2 installed, the usual tools work on each bag:
 ros2 bag info .kinex/recordings/rec_00mv475jct0000ur/devices/arm/stream/bag
 ```
 
-Kinex Python includes `rosbag2_py`, so the agent can also read bags with `exec`. This script reads the arm's joint states from a bag passed in `args`:
+Kinex Python includes `rosbag2_py`, so the agent can read bags in a program. This one reads the arm's joint states from a bag passed in `args`:
 
 ```python
 import rosbag2_py
@@ -112,7 +112,7 @@ Topics in the bag use each operation's ROS topic name, which `operations.json` l
 
 Each recording keeps the instruction, the outcome, the conversation and the exact device data, which makes it useful beyond review:
 
-- **Refining skills and tools.** Point the agent at past recordings, for example "review the last three failed runs and update the pick-and-place skill". It can compare failed and successful attempts and turn what it finds into better skills, tools or parameters.
-- **Training models.** Observations, commanded actions and outcome labels are already in the shape of robot-learning episodes, so recordings can be turned into training data for policies that then run through [`helpers.run_policy`](/docs/vla/).
+- **Improving skills and programs.** Point the agent at past recordings: *"review the last three failed runs and update the pick-and-place skill"*. It can compare failed and successful attempts and turn what it finds into better [skills](/docs/writing-skills/), [library functions](/docs/programs/) or parameters.
+- **Training models.** Observations, commanded actions and outcome labels are already in the shape of robot-learning episodes, so recordings convert to training data for policies that then run as [model devices](/docs/models/#run-a-policy).
 
 To save just the conversation, use `/export` instead; see [Working with the agent](/docs/agent/).

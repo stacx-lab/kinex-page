@@ -1,0 +1,79 @@
+---
+title: Architecture
+description: The three layers Kinex gives a coding agent, how one task flows through them, and why they are built on ROS 2.
+group: Concepts
+order: 10
+sources: ["README.md", "docs/architecture.md", "docs/overview.md", "docs/communication.md", "docs/devices.md", "packages/core/src/context/robotics.txt", "assets/architecture-day.svg"]
+---
+
+import ArchDiagram from '../../components/ArchDiagram.astro';
+
+A coding agent already knows how to work: read what is there, write a program, run it, check the result. Kinex lets it work on a robot the same way by putting three layers between the agent and the physical world.
+
+<ArchDiagram diagramOnly />
+
+| Layer | Answers | What it is |
+| --- | --- | --- |
+| [Devices](/docs/devices/) | *What can the robot do?* | Typed ROS 2 interfaces to hardware, simulators and models, each described by a profile |
+| [Control graph](/docs/control-graph/) | *How does the agent do it?* | Python programs the agent writes and runs with `exec`, built from device operations and library functions |
+| [Skills](/docs/skills/) | *How should it approach the task?* | Written procedures the agent loads when a task calls for them |
+
+Each layer changes without touching the others. A new robot needs new devices. A new task needs a new program. New know-how needs a new skill.
+
+## One task, end to end
+
+Say you ask for *"put the red block in the bin"*:
+
+1. **Read.** The agent lists the workspace's devices and reads their profiles: an arm, a gripper, two cameras, a `world`.
+2. **Look.** It reads a camera. The image comes back attached to the tool result.
+3. **Write and run.** It writes a program that locates the block, plans an approach, commands the arm, waits on the world clock and checks the measured joint state. `exec` runs it.
+4. **Observe.** The program finishes with a small result and the images the agent needs to judge what happened.
+5. **Decide.** The agent grasps, re-plans or stops, and repeats from step 3 until the task is done.
+
+The agent works in closed loop: it ends a program wherever its next move depends on something it has to see.
+
+## The coding-agent analogy
+
+| Layer | In a coding agent | In Kinex |
+| --- | --- | --- |
+| Devices | Disks and GPUs behind OS and driver interfaces | Cameras, arms and models behind ROS 2 device nodes |
+| Control graph | A script run with `bash` that chains programs together | A Python program run with `exec` that chains device operations together |
+| Skills | "Reproduce, inspect, fix, test" | "Sample, solve, verify" for a calibration |
+
+## Design principles
+
+### Devices are ROS 2 contracts
+
+A device's profile names each operation, its ROS type and what it does. That is everything the agent needs to use it. The agent never handles a vendor SDK, so one agent works with any robot that can be described this way, and a simulated arm is indistinguishable from a real one.
+
+### Nodes own the hardware
+
+Only device nodes talk to SDKs, simulators and model services, and only they hold long-lived state such as an open connection or a model on the GPU. The agent's programs are short-lived and stateless, so it can rewrite them freely. Kinex starts only the nodes a device declares, and never stops a ROS stack it merely connected to.
+
+### The world device owns time
+
+Every workspace has a `world` device with a clock and a `wait` operation. A program that waits on the world runs unchanged on hardware, in a realtime simulation and in a stepped one. Reading a sensor never advances the world.
+
+### Setup is scoped to the task
+
+Onboarding and calibration prepare what the current task needs and nothing more. A fact nobody knows yet stays unknown, written `???`, and is measured when a task first depends on it.
+
+## Why ROS 2
+
+Kinex builds on ROS 2 instead of a protocol of its own because it brings:
+
+- **A flexible communication stack.** Topics carry streams and commands, services carry requests and actions carry goals that take time. Devices and programs can share a process, a machine or a network.
+- **Typed messages.** Standard types such as `JointState`, `JointTrajectory`, `Image` and `Twist` make every interface explicit and checkable. Kinex adds three small service types of its own.
+- **An ecosystem.** Vendor drivers and controllers work as they are, and so do tf2 for frames and rosbag2 for [recording](/docs/recording/). Kinex supports Jazzy and Humble, in an environment of its own that leaves your system ROS untouched.
+
+## Packages
+
+| Package | Role |
+| --- | --- |
+| `@kinex/core` | The robotics runtime: devices, ROS communication, `exec`, the Python library and recording. It depends on no agent or UI. |
+| `@kinex/setup` | Onboarding and calibration on top of core |
+| `kinex` | The app you run. It combines both with the [Pi](https://pi.dev) coding agent, which supplies models, the conversation loop, sessions and the terminal UI. |
+| [kinex-plugins](https://github.com/stacx-lab/kinex-plugins) | The same runtime inside Pi, Claude Code and Codex |
+| [kinex-sim](https://github.com/stacx-lab/kinex-sim) | Simulators served as Kinex devices |
+
+For the exact contracts behind these principles, see the [design documents](https://github.com/stacx-lab/kinex/blob/e49da2e9a1158e8774f007e75adf9e41705f4e9b/docs/README.md) in the Kinex repository.

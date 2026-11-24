@@ -1,19 +1,19 @@
 ---
 title: Working with the agent
-description: Choose a model, talk to the agent, set how much it asks for approval, and manage conversations, compaction and sessions.
+description: Choose a model, steer the agent while it works, set how much it asks before acting, and manage sessions and context.
 group: Guides
 order: 10
 label: Working with the agent
 sources: ["README.md", "docs/agent-integration.md", "src/application.ts", "src/auth.ts", "src/arguments.ts", "src/sessions.ts", "src/settings.ts", "src/export.ts", "src/resume-hint.ts", "src/integration/interaction.ts", "src/integration/extension.ts", "src/integration/compaction.txt", "src/integration/default-extensions.ts"]
 ---
 
-Kinex is built on the [Pi](https://pi.dev) coding agent (`@earendil-works/pi-coding-agent`, bundled at version 1.2.0, so there's nothing extra to install). Pi provides the agent itself: the model connection, the conversation loop, the terminal UI, sessions, compaction and the everyday coding tools (`read`, `write`, `edit`, `bash`, `grep`, `find`, `ls`). Kinex adds the robotics on top: devices, robotics tools and skills, permissions and recording.
+Kinex is built on the [Pi](https://pi.dev) coding agent, bundled at version 1.6.0, so there is nothing extra to install. Pi provides the agent itself: model connections, the conversation loop, the terminal UI, sessions, compaction and the everyday coding tools. Kinex adds the robotics: devices, programs, skills, approvals and recording.
 
-Apart from approvals and devices, everything on this page works the way it does in Pi. If you've used Pi or a similar coding agent before, it will feel familiar. For more detail, see [Pi's documentation](https://github.com/earendil-works/pi/tree/v1.2.0/packages/coding-agent/docs).
+If you have used Pi or a similar coding agent, this will feel familiar. Apart from approvals and devices, everything on this page works as it does in Pi; see [Pi's documentation](https://github.com/earendil-works/pi/tree/main/packages/coding-agent/docs) for more.
 
 ## Choosing a model
 
-The agent model is the LLM that reads your requests and decides what to do. It's separate from the perception and policy models your robot uses, which are [devices](/docs/devices/) (see [Using vision models](/docs/vision/) and [Using VLAs](/docs/vla/)). Slash commands like `/ping` don't need a model at all.
+The agent's model is the LLM that reads your requests and decides what to do. It is separate from the perception and policy models your robot uses, which are [model devices](/docs/models/). Device commands such as `/ping` and `/exec` need no model at all.
 
 ```text
 /login              # connect a provider, with an OAuth subscription or an API key (or set one of the API-key environment variables Pi recognizes)
@@ -46,7 +46,7 @@ To use a model you host yourself, add it to `~/.config/kinex/agent/models.json`:
 }
 ```
 
-Start the model server, then choose `local/your-model-name` with `/model`. See Pi's [custom provider docs](https://github.com/earendil-works/pi/blob/v1.2.0/packages/coding-agent/docs/models.md) for all options.
+Start the model server, then choose `local/your-model-name` with `/model`. See Pi's [model configuration](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/models.md) for all options.
 
 ### Where credentials are kept
 
@@ -63,13 +63,15 @@ Type a request and press Enter. While the agent is working, you can keep talking
 | **Escape** | Interrupt the agent |
 | **Ctrl+O** | Expand tool calls to see exactly what was run and returned |
 
-A few other commands help day to day: `/copy` copies the agent's last reply, `/settings` opens preferences and `/hotkeys` lists every shortcut. `/quit` exits. Escape only stops the agent's response; to stop the robot as well, use `/stop`.
+Escape stops the agent's response, not the robot. To stop the robot as well, use `/stop`.
 
-Kinex also bundles two Pi extensions: [pi-web-search](https://www.npmjs.com/package/pi-web-search), which lets the agent search the web, and [pi-btw](https://www.npmjs.com/package/pi-btw), for side conversations that don't interrupt the main one. Side conversations use Pi's regular coding tools only, without your devices or Kinex's approval checks. You can add more Pi packages; see [Plugin systems](/docs/plugins/).
+A few other commands help day to day: `/copy` copies the agent's last reply, `/settings` opens preferences, `/hotkeys` lists every shortcut and `/quit` exits.
+
+Kinex also bundles two Pi extensions: [pi-web-search](https://www.npmjs.com/package/pi-web-search), which lets the agent search the web, and [pi-btw](https://www.npmjs.com/package/pi-btw), for side conversations that don't interrupt the main one. Side conversations use Pi's regular coding tools only, without your devices or Kinex's approval checks. You can add more Pi packages; see [Plugins](/docs/plugins/).
 
 ## Approval modes
 
-Before the agent runs a tool, such as reading a device, moving the robot or running a shell command, Kinex checks whether it needs your approval. The approval mode sets how much it asks:
+Before the agent reads a device, runs a program or runs a shell command, Kinex checks whether it needs your approval. The approval mode sets how much it asks:
 
 | Mode | The agent's tool calls | The agent's questions to you |
 | --- | --- | --- |
@@ -81,11 +83,11 @@ Switch with `/mode` (or `/mode auto`), or start in a mode with `kinex --auto` or
 
 When Kinex asks, you can **allow once**, **allow for the rest of the session**, or **deny**. Denying stops the rest of that turn, so related calls don't run without you. Switching mode clears the approvals you've granted for the session.
 
-In scripted runs without a terminal, nobody is there to answer, so in `ask` mode anything that would prompt is denied and the agent's questions are answered from the evidence it already has. See [Permissions](/docs/control-graph/#permissions) for what each permission covers and how to set rules.
+In scripted runs without a terminal, nobody is there to answer. In `ask` mode a call that would prompt is denied, which ends the turn, and the agent's questions are answered with "no answer is available; use the evidence you have". See [Permissions](/docs/workspace/#permissions) for what each permission covers and how to set rules.
 
 ## Sessions
 
-A **session** is one conversation: your messages, the agent's replies and every tool call. It's separate from the **workspace**, the `.kinex/` folder that holds your devices, tools, skills and recordings. Switching sessions never changes the workspace, and vice versa.
+A **session** is one conversation: your messages, the agent's replies and every tool call. It's separate from the **workspace**, the `.kinex/` folder that holds your devices, programs, skills and recordings. Switching sessions never changes the workspace, and vice versa.
 
 Each session is saved automatically. When you quit, Kinex prints the command to come back to it. To return later:
 
@@ -121,7 +123,7 @@ Long conversations eventually fill the model's context window. Compaction summar
 /compact keep the calibration results in detail   # tell it what to preserve
 ```
 
-Kinex makes sure compaction doesn't lose track of the robot. The summary keeps device names, calibration values and actions whose outcome isn't confirmed yet, and Kinex restores its robotics instructions and workspace context afterwards. Old observations in the history are still just history, though. When the current state matters, the agent reads the device again.
+Kinex makes sure compaction doesn't lose track of the robot. The summary keeps device names, calibration values and actions whose outcome isn't confirmed yet, and Kinex restores its robotics instructions afterwards. Old observations are still history, though: when the current state matters, the agent reads the device again.
 
 The footer shows how long you've been actively working in the session, not counting idle time.
 

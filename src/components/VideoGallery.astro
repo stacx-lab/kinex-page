@@ -1,19 +1,16 @@
 ---
 import { galleryVideos } from '../data/gallery';
 import GalleryPlayer from './GalleryPlayer.astro';
+import SectionHead from './SectionHead.astro';
 // Repeat clips around a full ring so both neighbors have a real face.
 const slotCount = galleryVideos.length * Math.ceil(8 / galleryVideos.length);
 const slots = Array.from({ length: slotCount }, (_, slot) => ({ clip: galleryVideos[slot % galleryVideos.length], slot }));
 ---
 
 <section class="wrap gallery" id="gallery" aria-labelledby="gallery-heading" aria-roledescription="carousel">
-  <div class="intro">
-    <div>
-      <p class="kicker">01 · Gallery</p>
-      <h2 id="gallery-heading">See the agent at work in the real world.</h2>
-      <p class="lead">Watch Agent + Kinex in the real world. Every demo is zero-shot—text instructions only, with no human demonstrations—showing the capabilities agents bring to robotics.</p>
-    </div>
-  </div>
+  <SectionHead n="01" label="Gallery" title="See the agent at work in the real world." id="gallery-heading">
+    Every demo is <strong>zero-shot</strong>: a text instruction, no human demonstrations and no task-specific training. The agent senses, reasons, acts and recovers by writing its own control code.
+  </SectionHead>
   <div class="gallery-layout">
       <label class="mobile-picker">
         <span>Choose a demo</span>
@@ -243,7 +240,7 @@ const slots = Array.from({ length: slotCount }, (_, slot) => ({ clip: galleryVid
 </script>
 
 <style>
-  .gallery { --cue-0: #137d78; --cue-1: #a4660c; --cue-2: #2563a6; padding-top: 72px; scroll-margin-top: 20px; }
+  .gallery { --cue-0: #137d78; --cue-1: #a4660c; --cue-2: #2563a6; padding-top: 88px; scroll-margin-top: 20px; }
   :global(:root[data-theme="dark"]) .gallery { --cue-0: #52c8b8; --cue-1: #e7ad55; --cue-2: #68b8f0; }
   .intro { margin-bottom: 24px; }
   h2 { font-size: var(--fs-4); letter-spacing: -0.02em; font-weight: 600; margin: 6px 0 10px; }

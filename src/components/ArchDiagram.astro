@@ -1,73 +1,116 @@
 ---
-// Animated version of kinex/assets/architecture.svg. Hover a definition to light up its layer.
+// Theme-aware redraw of kinex/assets/architecture-*.svg. On the landing page the three
+// layer cards below the figure light up their layer; docs pages embed the figure alone.
 import { url } from '../lib/url';
 interface Props { diagramOnly?: boolean }
 const { diagramOnly = false } = Astro.props;
 const layers = [
-  { id: 'skills', name: 'Skills', what: 'Instructions, procedures', eg: 'setup-device · calibration · verification', href: '/docs/skills/' },
-  { id: 'tools', name: 'Control graph', what: 'Python programs: perception, computation, control', eg: 'exec · kinex.helpers · custom tools', href: '/docs/control-graph/' },
-  { id: 'devices', name: 'Devices', what: 'Typed ROS 2 interfaces, profiles, nodes', eg: 'arm · camera · VLA · world', href: '/docs/devices/' },
+  { id: 'skills', name: 'Skills', what: 'Procedures, references and required evidence', chips: ['setup-device', 'calibrate-*', 'verify-*'], y: 84, href: '/docs/skills/',
+    more: 'Written know-how the agent loads when a task calls for it. Loading a skill runs nothing and grants nothing.' },
+  { id: 'graph', name: 'Control graph', what: 'Python programs for perception and control', chips: ['exec', 'kinex.lib', 'saved programs'], y: 214, href: '/docs/control-graph/',
+    more: 'The agent writes a program, runs it with exec and reads back a result and images. No fixed motion commands.' },
+  { id: 'devices', name: 'Devices', what: 'Typed ROS 2 interfaces, profiles and nodes', chips: ['arm', 'camera', 'sam3', 'world'], y: 400, href: '/docs/devices/',
+    more: 'Arms, cameras, models and a clock, each a set of ROS 2 topics, services and actions described by a profile.' },
 ];
+const environments = [
+  { name: 'Hardware', lines: ['Arms, grippers, bases,', 'cameras and sensors'], y: 84 },
+  { name: 'Simulators', lines: ['kinex-sim worlds on', 'the same contract'], y: 236 },
+  { name: 'Model services', lines: ['Vision and policy', 'models as devices'], y: 388 },
+];
+const hosts = [
+  { name: 'Kinex', x: 40, y: 420, w: 62 }, { name: 'Pi', x: 110, y: 420, w: 40 },
+  { name: 'Claude Code', x: 40, y: 452, w: 104 }, { name: 'Codex', x: 152, y: 452, w: 62 },
+];
+// Chip widths follow the monospace advance (about 7.3 units per character at 12px).
+const chipWidth = (text: string) => Math.round(text.length * 7.3 + 22);
+const chipRow = (chips: string[], x: number) => chips.reduce<{ text: string; x: number; w: number }[]>((row, text) => {
+  const last = row.at(-1);
+  return [...row, { text, x: last ? last.x + last.w + 8 : x, w: chipWidth(text) }];
+}, []);
 ---
-<div class:list={['arch', { 'diagram-only': diagramOnly }]} tabindex={diagramOnly ? 0 : undefined}>
-  <svg viewBox="0 0 900 560" role="img" aria-labelledby="arch-t arch-d">
-    <title id="arch-t">Kinex architecture</title>
-    <desc id="arch-d">The agent loads skills, runs control-graph programs through exec and calls devices directly. Control graphs read and command devices over ROS 2. Device nodes talk to hardware, simulators and model services.</desc>
-    <defs>
-      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-        <path d="M0 0L10 5L0 10z" class="ahead" />
-      </marker>
-    </defs>
+<div class:list={['arch', { 'diagram-only': diagramOnly }]}>
+  <div class="figure" tabindex={0} role="group" aria-label="Kinex architecture diagram">
+    <svg viewBox="0 0 1000 560" role="img" aria-labelledby="arch-t arch-d">
+      <title id="arch-t">Kinex: skills, control graph and devices</title>
+      <desc id="arch-d">A coding agent loads skills, runs control-graph programs through exec and calls devices directly; both return results. Programs operate devices and receive their observations. Device nodes exchange commands and feedback with hardware, simulators and model services.</desc>
+      <defs>
+        <marker id="arch-head" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9Z" class="head" /></marker>
+        <marker id="arch-head-back" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9Z" class="head back" /></marker>
+        <pattern id="arch-dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="1.1" class="dot" /></pattern>
+      </defs>
+      <rect width="1000" height="560" rx="22" class="canvas" />
+      <rect width="1000" height="560" rx="22" fill="url(#arch-dots)" />
 
-    <rect x="300" y="18" width="580" height="404" rx="6" class="frame" />
-    <text x="318" y="42" class="tag">Kinex</text>
+      <g class="agent">
+        <rect x="22" y="84" width="204" height="432" rx="14" />
+        <text x="40" y="118" class="lbl">Agent</text>
+        <text x="40" y="150" class="h">Coding agent</text>
+        {['Reasons and plans', 'Writes control code', 'Interprets results'].map((line, i) => (
+          <g><circle cx="45" cy={187 + i * 28} r="3" class="bullet" /><text x="60" y={192 + i * 28} class="b">{line}</text></g>
+        ))}
+        <path d="M40 378H208" class="divider" />
+        <text x="40" y="404" class="lbl">Runs in</text>
+        {hosts.map((host) => (
+          <g class="chip"><rect x={host.x} y={host.y} width={host.w} height="24" rx="12" /><text x={host.x + host.w / 2} y={host.y + 16} text-anchor="middle">{host.name}</text></g>
+        ))}
+      </g>
 
-    <g class="agent">
-      <rect x="20" y="166" width="200" height="148" rx="6" />
-      <text x="38" y="196" class="h">Agent</text>
-      <text x="38" y="226" class="b">Plan · reason</text>
-      <text x="38" y="250" class="b">Write control code</text>
-      <text x="38" y="274" class="b">Read results</text>
-    </g>
+      <g class="kinex">
+        <rect x="296" y="22" width="404" height="516" rx="18" class="frame" />
+        <image class="day" href={url('/img/kinex-logo-text-day.svg')} x="314" y="40" width="102" height="24" />
+        <image class="night" href={url('/img/kinex-logo-text-night.svg')} x="314" y="40" width="102" height="24" />
+        <text x="682" y="57" text-anchor="end" class="lbl">Robotics harness</text>
+      </g>
 
-    {layers.map((l, i) => {
-      const y = [56, 182, 316][i];
-      return (
-        <g class={`layer l-${l.id}`}>
-          <rect x="320" y={y} width="540" height="86" rx="5" />
-          <text x="340" y={y + 30} class="h">{l.name}</text>
-          <text x="340" y={y + 54} class="b">{l.what}</text>
-          <text x="340" y={y + 74} class="e">{l.eg}</text>
+      {layers.map((layer) => (
+        <g class={`layer l-${layer.id}`}>
+          <rect x="312" y={layer.y} width="372" height="116" rx="12" />
+          <rect x="326" y={layer.y + 18} width="4" height="42" rx="2" class="bar" />
+          <text x="344" y={layer.y + 38} class="h">{layer.name}</text>
+          <text x="344" y={layer.y + 61} class="b">{layer.what}</text>
+          {chipRow(layer.chips, 344).map((chip) => (
+            <g class="chip"><rect x={chip.x} y={layer.y + 76} width={chip.w} height="24" rx="12" /><text x={chip.x + chip.w / 2} y={layer.y + 92} text-anchor="middle">{chip.text}</text></g>
+          ))}
         </g>
-      );
-    })}
+      ))}
 
-    <g class="env">
-      <rect x="320" y="474" width="540" height="70" rx="5" />
-      <text x="340" y="502" class="h">Environment</text>
-      <text x="340" y="526" class="b">Hardware · simulators · model endpoints</text>
-    </g>
+      <text x="790" y="57" class="lbl">Environments</text>
+      {environments.map((env) => (
+        <g class="env">
+          <rect x="790" y={env.y} width="190" height="128" rx="12" />
+          <rect x="804" y={env.y + 18} width="4" height="92" rx="2" class="bar" />
+          <text x="822" y={env.y + 40} class="h">{env.name}</text>
+          {env.lines.map((line, i) => <text x="822" y={env.y + 66 + i * 20} class="b">{line}</text>)}
+        </g>
+      ))}
 
-    <g class="flows">
-      <path d="M120 166 V99 H318" class="f" /><text x="200" y="90" class="lbl">Load</text>
-      <path d="M220 214 H318" class="f" /><text x="238" y="206" class="lbl">exec</text>
-      <path d="M320 240 H222" class="f r" /><text x="238" y="258" class="lbl">Result</text>
-      <path d="M100 314 V352 H318" class="f" /><text x="238" y="344" class="lbl">Call</text>
-      <path d="M320 378 H140 V316" class="f r" /><text x="238" y="396" class="lbl">Result</text>
-      <path d="M520 268 V314" class="f" /><text x="530" y="296" class="lbl">Pub/req</text>
-      <path d="M700 316 V270" class="f r" /><text x="710" y="296" class="lbl">Obs/state</text>
-      <path d="M520 402 V472" class="f" /><text x="530" y="442" class="lbl">Node req</text>
-      <path d="M700 474 V404" class="f r" /><text x="710" y="442" class="lbl">Feedback</text>
-    </g>
-  </svg>
+      <g class="flows">
+        <path d="M226 142H310" class="f" /><text x="268" y="133" text-anchor="middle" class="fl">load</text>
+        <path d="M226 256H310" class="f" /><text x="268" y="247" text-anchor="middle" class="fl">exec</text>
+        <path d="M312 288H228" class="f r" /><text x="268" y="306" text-anchor="middle" class="fl">results</text>
+        <path d="M226 442H310" class="f" /><text x="268" y="433" text-anchor="middle" class="fl">call</text>
+        <path d="M312 474H228" class="f r" /><text x="268" y="492" text-anchor="middle" class="fl">results</text>
+        <path d="M440 330V398" class="f" /><text x="430" y="369" text-anchor="end" class="fl">operations</text>
+        <path d="M556 400V332" class="f r" /><text x="566" y="369" class="fl">observations</text>
+        <path d="M684 444H766" class="f plain" /><text x="736" y="435" text-anchor="middle" class="fl">commands</text>
+        <path d="M766 472H686" class="f r" /><text x="736" y="490" text-anchor="middle" class="fl">feedback</text>
+        <path d="M766 472V148" class="f plain" />
+        <path d="M766 148H788" class="f" /><path d="M766 300H788" class="f" /><path d="M766 452H788" class="f" />
+        <circle cx="766" cy="148" r="3" class="joint" /><circle cx="766" cy="300" r="3" class="joint" /><circle cx="766" cy="444" r="3" class="joint" />
+      </g>
+    </svg>
+  </div>
 
-  {!diagramOnly && <ul class="defs">
-    {layers.map((l, i) => (
-      <li class={`d-${l.id}`}>
-        <a href={url(l.href)}>
+  <p class="hint" aria-hidden="true">Scroll sideways to see the whole figure →</p>
+
+  {!diagramOnly && <ul class="cards">
+    {layers.map((layer, i) => (
+      <li class={`c-${layer.id}`}>
+        <a href={url(layer.href)}>
           <span class="n">0{i + 1}</span>
-          <span class="nm">{l.name}</span>
-          <span class="w">{l.what}</span>
+          <span class="nm">{layer.name}</span>
+          <span class="w">{layer.more}</span>
+          <span class="go" aria-hidden="true">Read the concept →</span>
         </a>
       </li>
     ))}
@@ -75,55 +118,66 @@ const layers = [
 </div>
 
 <style>
-  /* Share the SVG's grid area: definitions sit in its unused lower-left space,
-     below the Agent and its return paths (past y=420 in the 900×560 viewBox). */
-  .arch { container-type: inline-size; display: grid; grid-template-columns: minmax(0, 30%) minmax(0, 70%); align-items: start; max-width: 860px; margin: 0 auto; }
-  svg { grid-area: 1 / 1 / 2 / 3; width: 100%; height: auto; display: block; font-family: var(--font-body); }
-  .arch.diagram-only { display: block; overflow-x: auto; }
-  .diagram-only svg { min-width: 600px; }
+  .arch { --l-skills: var(--skills); --l-graph: var(--graph); --l-devices: var(--devices); }
+  .figure { overflow-x: auto; border-radius: 16px; scrollbar-width: thin; }
+  .figure:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  svg { display: block; width: 100%; min-width: 720px; height: auto; }
+  .diagram-only svg { min-width: 640px; }
+  .diagram-only { margin: 0 0 1.4em; }
+  .hint { display: none; margin: 8px 0 0; font-size: 12.5px; color: var(--ink-3); }
+  @media (max-width: 760px) { .hint { display: block; } }
 
-  .frame { fill: none; stroke: var(--rule-2); stroke-dasharray: 4 4; }
-  .tag, .lbl, .e { font-family: var(--font-mono); }
-  .h { font-family: var(--font-head); }
-  .tag { font-size: 12px; fill: var(--ink-3); }
-  .h { font-size: 17px; font-weight: 600; fill: var(--ink); }
-  .b { font-size: 13px; fill: var(--ink-2); }
-  .e { font-size: 11.5px; fill: var(--ink-3); font-style: italic; }
-  .lbl { font-size: 11px; fill: var(--ink-3); }
+  .canvas { fill: var(--panel); stroke: var(--rule); }
+  .dot { fill: var(--ink); opacity: 0.1; }
+  text { font-family: var(--font-body); }
+  .h { font-family: var(--font-head); font-size: 20px; font-weight: 600; fill: var(--ink); letter-spacing: -0.01em; }
+  .b { font-size: 14px; fill: var(--ink-2); }
+  .lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; fill: var(--ink-3); }
+  .fl { font-family: var(--font-mono); font-size: 11.5px; fill: var(--ink-2); }
+  .chip rect { fill: var(--bg-2); stroke: var(--rule); }
+  .chip text { font-family: var(--font-mono); font-size: 12px; fill: var(--ink-2); }
 
-  .agent rect { fill: var(--panel); stroke: var(--ink); }
-  .env rect { fill: var(--bg-2); stroke: var(--rule-2); }
-  .layer rect { stroke-width: 1; transition: fill .2s, stroke-width .2s; }
-  .l-skills { --c: var(--accent); }
-  .l-tools { --c: var(--warn); }
-  .l-devices { --c: var(--ok); }
-  .layer rect { fill: color-mix(in srgb, var(--c) 7%, var(--panel)); stroke: var(--c); }
-  .layer .h { fill: var(--c); }
+  .agent > rect { fill: var(--bg); stroke: var(--rule-2); stroke-width: 1.5; }
+  .bullet { fill: var(--accent); }
+  .divider { stroke: var(--rule); }
+  .frame { fill: color-mix(in srgb, var(--accent) 6%, var(--panel)); stroke: color-mix(in srgb, var(--accent) 45%, var(--rule)); stroke-width: 1.5; }
+  .night { display: none; }
+  :global(:root[data-theme='dark']) .day { display: none; }
+  :global(:root[data-theme='dark']) .night { display: inline; }
 
-  .ahead { fill: var(--ink-3); }
-  .f {
-    fill: none; stroke: var(--ink-3); stroke-width: 1.4; marker-end: url(#ah);
-    stroke-dasharray: 5 5; animation: flow 1.2s linear infinite;
+  .l-skills { --c: var(--skills); } .l-graph { --c: var(--graph); } .l-devices { --c: var(--devices); }
+  .env { --c: var(--env); }
+  .layer > rect:first-child, .env > rect:first-child {
+    fill: color-mix(in srgb, var(--c) 6%, var(--panel)); stroke: color-mix(in srgb, var(--c) 50%, var(--rule));
+    stroke-width: 1.5; transition: fill .2s, stroke .2s;
   }
-  .f.r { stroke: var(--accent); opacity: .75; }
-  @keyframes flow { to { stroke-dashoffset: -20; } }
+  .bar { fill: var(--c); }
 
-  .arch:has(.d-skills:hover) .l-skills rect,
-  .arch:has(.d-tools:hover) .l-tools rect,
-  .arch:has(.d-devices:hover) .l-devices rect { fill: color-mix(in srgb, var(--c) 20%, var(--panel)); stroke-width: 2.5; }
+  .head { fill: var(--ink-3); }
+  .head.back { fill: var(--accent); }
+  .f { fill: none; stroke: var(--ink-3); stroke-width: 1.6; marker-end: url(#arch-head); }
+  .f.r { stroke: var(--accent); marker-end: url(#arch-head-back); stroke-dasharray: 5 5; animation: arch-flow 1.2s linear infinite; }
+  .f.plain { marker-end: none; }
+  .joint { fill: var(--ink-3); }
+  @keyframes arch-flow { to { stroke-dashoffset: -20; } }
 
-  .defs { grid-area: 1 / 1 / 2 / 2; list-style: none; padding: 0; border-top: 1px solid var(--rule); display: flex; flex-direction: column;
-          margin: calc(100cqw * 420 / 900) 8px 0 calc(100cqw * 20 / 900); }
-  .defs li { display: flex; border-bottom: 1px solid var(--rule); }
-  .defs a { flex: 1; display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 0 6px; align-content: center; padding: 6px 0; }
-  .n { font-size: 11px; color: var(--ink-3); padding-top: 3px; }
-  .nm { font-weight: 600; line-height: 1.3; }
-  .w { grid-column: 2; font-size: 12.5px; line-height: 1.35; color: var(--ink-2); }
-  .defs a:hover .nm { color: var(--accent); }
-  .defs a:hover .nm::after { content: ' →'; }
-  @media (max-width: 600px) {
-    .arch:not(.diagram-only) { grid-template-columns: minmax(0, 1fr); }
-    .arch:not(.diagram-only) svg { grid-area: 1 / 1; }
-    .defs { grid-area: 2 / 1; margin: 16px 0 0; }
+  .arch:has(.c-skills:is(:hover, :focus-within)) .l-skills > rect:first-child,
+  .arch:has(.c-graph:is(:hover, :focus-within)) .l-graph > rect:first-child,
+  .arch:has(.c-devices:is(:hover, :focus-within)) .l-devices > rect:first-child {
+    fill: color-mix(in srgb, var(--c) 18%, var(--panel)); stroke: var(--c);
   }
+
+  .cards { list-style: none; margin: 20px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .c-skills { --c: var(--skills); } .c-graph { --c: var(--graph); } .c-devices { --c: var(--devices); }
+  .cards a {
+    position: relative; display: grid; gap: 6px; height: 100%; align-content: start; padding: 18px 20px 18px 24px;
+    border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); transition: border-color .15s, transform .15s, box-shadow .15s;
+  }
+  .cards a::before { content: ''; position: absolute; left: 10px; top: 18px; width: 4px; height: 38px; border-radius: 2px; background: var(--c); }
+  .cards a:hover { border-color: color-mix(in srgb, var(--c) 60%, var(--rule)); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .n { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+  .nm { font-family: var(--font-head); font-weight: 600; font-size: 18px; line-height: 1.2; }
+  .w { font-size: 14.5px; line-height: 1.55; color: var(--ink-2); }
+  .go { margin-top: 4px; font-size: 13px; color: var(--c); font-weight: 700; }
+  @media (max-width: 820px) { .cards { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
 </style>

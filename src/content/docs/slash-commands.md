@@ -1,26 +1,37 @@
 ---
 title: Slash commands
-description: The commands you'll use inside a Kinex session, plus keyboard shortcuts.
+description: The commands you type inside a Kinex session, and the keys that go with them.
 group: Reference
 order: 20
-sources: ["docs/commands.md", "packages/core/src/commands.ts", "packages/core/src/integration.ts", "packages/setup/src/integration.ts", "src/integration/commands.ts", "src/integration/extension.ts"]
+sources: ["docs/commands.md", "packages/core/src/commands.ts", "packages/setup/src/integration.ts", "src/integration/commands.ts", "src/integration/extension.ts"]
 ---
 
-Type `/` in a session to search every available command. Device names complete with Tab. Device and recording commands run immediately, without involving the model; they also work from the shell, such as `kinex run "/ping arm"`.
+Type `/` in a session to search every command; device names complete with Tab. Device, program and recording commands run at once, without the model, and also work from the shell: `kinex run "/ping all"`. The exception is `/register`, which hands the work to the agent.
 
 ## Devices
 
 | Command | Does |
 | --- | --- |
 | `/devices` | List devices and whether each is set to load |
-| `/load <device\|all>` | Connect a device, starting any nodes it declares, and wait until it's ready |
+| `/load <device\|all>` | Connect a device, starting the nodes it declares, and wait until it is ready |
 | `/unload <device\|all>` | Disconnect a device and release its resources |
-| `/ping <device\|all>` | Check a device's live status, without starting anything |
-| `/stop [device]` | Cancel the agent's response, stop the robot's motion and cancel scripts that commanded it, without asking for approval |
-| `/register <type-or-template>` | Ask the agent to set up a new device of this type or template; it stays unloaded |
-| `/unregister <device>` | After confirmation, unload a device and delete its profile, node and local files (needs the TUI; from the shell it's cancelled) |
+| `/ping <device\|all>` | Check live status without starting anything |
+| `/stop [device]` | Cancel the agent's response, stop the robot's motion and cancel the programs that commanded it. Never asks for approval. |
+| `/register <type-or-template>` | Have the agent set up a new device of this type or template; it stays unloaded |
+| `/unregister <device>` | After confirmation, unload a device and delete its profile, node and local files |
 
-To restart a device, for example after editing its profile or node, run `/unload` and then `/load`.
+To restart a device after editing its profile or node, run `/unload` and then `/load`.
+
+## Programs
+
+| Command | Does |
+| --- | --- |
+| `/exec <file.py> [name=value ...]` | Run a saved program without the model |
+| `/lib [module[.function]]` | Browse the function library: modules, a module's functions, one function's signature |
+| `/visualize <file.py[:function]\|module.function> [output.html]` | Draw a program or function as a flow chart page |
+| `/subagent [<provider/model> [thinking]\|session]` | Show or choose the model that subagents in programs use |
+
+While the agent is idle, Escape cancels a running `/exec`. See [Programs and the library](/docs/programs/).
 
 ## Recording
 
@@ -31,7 +42,7 @@ To restart a device, for example after editing its profile or node, run `/unload
 | `/record status` | Show the active recording and summaries of recent ones |
 | `/record stop [success\|failure\|partial] [note]` | Stop and save, with an optional outcome |
 
-Add `--verbose` right after the action (for example `/record status --verbose`) to include empty fields. See [Recording](/docs/recording/).
+Add `--verbose` after the action, as in `/record status --verbose`, to include empty fields. See [Recording](/docs/recording/).
 
 ## Setup
 
@@ -39,28 +50,20 @@ These hand a guided task to the agent, so they need a model.
 
 | Command | Does |
 | --- | --- |
-| `/onboarding [description]` | Set up the robot for a task: devices, checks and any calibration it needs |
-| `/calibrate [what]` | Calibrate what you describe, or continue the current task's calibration |
+| `/onboarding [description]` | Set the robot up for a task: devices, checks and the calibration it needs |
+| `/calibrate [scope]` | Calibrate what you describe, or continue the current task's calibration |
 
 See [Onboarding & calibration](/docs/onboarding/).
 
-## Approvals
-
-| Command | Does |
-| --- | --- |
-| `/mode [ask\|auto\|yolo]` | Choose how much the agent asks for approval; bare `/mode` opens a picker |
-
-See [Approval modes](/docs/agent/#approval-modes).
-
 ## Agent and sessions
 
-These come from Pi, the coding agent Kinex is built on. See [Working with the agent](/docs/agent/).
+`/mode` is Kinex's own; the rest come from Pi. See [Working with the agent](/docs/agent/).
 
 | Command | Does |
 | --- | --- |
+| `/mode [ask\|auto\|yolo]` | Choose how much the agent asks before acting; bare `/mode` opens a picker |
 | `/login`, `/logout` | Connect or disconnect a model provider |
-| `/model` | Choose the model |
-| `/thinking` | Set reasoning effort |
+| `/model`, `/thinking` | Choose the model and its reasoning effort |
 | `/new`, `/resume` | Start a new session, or switch to a saved one |
 | `/tree`, `/fork`, `/clone` | Browse branches, branch from an earlier message, or copy the session |
 | `/name`, `/session` | Name the session, or show its details |
@@ -68,17 +71,17 @@ These come from Pi, the coding agent Kinex is built on. See [Working with the ag
 | `/export [path]` | Save the session as HTML or JSONL |
 | `/copy` | Copy the agent's last reply |
 | `/settings`, `/hotkeys` | Open preferences, or list keyboard shortcuts |
-| `/reload` | Reload extensions, skills, prompts and themes (not devices) |
+| `/reload` | Reload extensions, skills, prompts and themes. It doesn't reload devices. |
 | `/quit` | Exit Kinex |
 
-Installed extensions and prompt templates can add their own commands. Start a line with `!` to run it as a shell command.
+Installed packages can add commands of their own. Start a line with `!` to run it as a shell command.
 
-## Keyboard shortcuts
+## Keys
 
 | Key | Does |
 | --- | --- |
-| Enter | Send; while the agent is working, steer it |
+| Enter | Send. While the agent is working, steer it. |
 | Shift+Enter | New line |
 | Alt+Enter | Queue a follow-up for when the agent finishes |
-| Escape | Interrupt the agent (use `/stop` to stop the robot too) |
+| Escape | Interrupt the agent, or cancel a running command. Use `/stop` to stop the robot too. |
 | Ctrl+O | Expand or collapse tool calls and their output |

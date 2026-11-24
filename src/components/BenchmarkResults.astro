@@ -4,7 +4,6 @@ import { benchmark, benchmarkScopes, astraComparison } from '../data/benchmark';
 ---
 
 <div class="benchmark-content">
-  <h3>Zero-Shot Robotic Manipulation Evaluation</h3>
   <p>
     We evaluate 132 tasks from LIBERO, RoboTwin, and RoboDojo under a <strong>zero-shot</strong> protocol
     with native success criteria. Control-step budgets are unchanged except for RoboDojo, increased to
@@ -68,7 +67,8 @@ import { benchmark, benchmarkScopes, astraComparison } from '../data/benchmark';
 </script>
 
 <style>
-  .benchmark-content { margin-top: 16px; }
+  .benchmark-content { margin-top: 0; }
+  .benchmark-content > p { max-width: 880px; }
   h3 { margin: 0 0 16px; font-size: var(--fs-4); font-weight: 600; letter-spacing: -0.02em; }
   p { color: var(--ink-2); margin: 0 0 16px; line-height: 1.75; }
   strong { color: var(--ink); font-weight: 600; }
